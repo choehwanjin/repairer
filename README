@@ -1,0 +1,22 @@
+Nautilus Extension For Filename Encoding Repair
+
+About
+nautilus-filename-repairer is a nautilus extension which repairs filename
+which uses wrong encoding in nautilus.
+This extension provides the context menu for any file whose filename uses wrong encoding, so that you cannot read the filename in naulius.
+You can find a candidate for filename in context menu or submenu.
+
+Homepage
+http://repairer.kldp.net/
+
+Project
+http://kldp.net/projects/repairer
+
+Bug Tracker
+
+Install
+$ ./configure
+$ make
+# make install
+
+Please read INSTALL, for detailed installation instructions.
