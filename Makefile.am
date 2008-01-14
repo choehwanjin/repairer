@@ -12,4 +12,4 @@ DISTCLEANFILES = \
         intltool-merge
 
 ChangeLog:
-	svn2cl
+	svn2cl --include-rev --break-before-msg=2 --authors=svnauthors
