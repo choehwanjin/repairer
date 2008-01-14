@@ -349,7 +349,9 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
 	    nautilus_menu_append_item(submenu, item);
 	    /* this code is a workaround for a bug of nautilus
 	     * See: http://bugzilla.gnome.org/show_bug.cgi?id=508878 */
-	    //items = g_list_append(items, item);
+#ifdef NEED_NAUTILUS_WORK_AROUND
+	    items = g_list_append(items, item);
+#endif
 	    g_free(filename);
 	    g_free(label);
 	    g_free(name);
