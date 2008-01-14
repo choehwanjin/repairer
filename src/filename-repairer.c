@@ -24,9 +24,9 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <libintl.h>
 
 #include "nautilus-filename-repairer.h"
+#include "nautilus-filename-repairer-i18n.h"
 
 static GType type_list[1];
 
