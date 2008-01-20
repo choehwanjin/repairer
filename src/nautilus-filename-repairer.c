@@ -133,6 +133,10 @@ create_candidate_list(NautilusFileInfo* info)
 	    if (unescaped_filename != NULL &&
 		strcmp(filename, unescaped_filename) != 0) {
 		basename = g_path_get_basename(unescaped_filename);
+		if (g_utf8_validate(basename, -1, NULL)) {
+		    array = g_ptr_array_new();
+		    g_ptr_array_add(array, g_strdup(basename));
+		}
 	    } else {
 		basename = g_path_get_basename(filename);
 	    }
@@ -147,7 +151,8 @@ create_candidate_list(NautilusFileInfo* info)
 		char* new_name;
 		int i;
 
-		array = g_ptr_array_new();
+		if (array == NULL)
+		    array = g_ptr_array_new();
 
 		encoding = get_default_encoding();
 		if (encoding != NULL) {
