@@ -38,7 +38,10 @@ static GType filename_repairer_type = 0;
 
 // from http://www.microsoft.com/globaldev/reference/wincp.mspx
 // Code Pages Supported by Windows
+// The first item will be selected as a default encoding if the matching locale
+// string is not exist
 static const char* encoding_list[] = {
+    "CP1252",  // Latin I  (default encoding)
     "CP874",   // Thai
     "CP932",   // Japanese Shift-JIS
     "CP936",   // Simplified Chinese GBK
@@ -46,7 +49,6 @@ static const char* encoding_list[] = {
     "CP950",   // Traditional Chinese Big5
     "CP1250",  // Central Europe
     "CP1251",  // Cyrillic
-    "CP1252",  // Latin I
     "CP1253",  // Greek
     "CP1254",  // Turkish
     "CP1255",  // Hebrew
@@ -62,45 +64,50 @@ struct encoding_item {
 };
 
 static const struct encoding_item default_encoding_list[] = {
-    { "ar",    "CP1256" }, 
-    { "el",    "CP1253" }, 
-    { "fr",    "CP1250" }, 
-    { "ja",    "CP932"  }, 
-    { "ko",    "CP949"  }, 
-    { "ru",    "CP1251" }, 
-    { "th",    "CP874"  }, 
-    { "tr",    "CP1254" }, 
-    { "vi",    "CP1258" }, 
-    { "zh_CN", "CP936"  }, 
-    { "zh_TW", "CP950"  },
+    { "ar",    "CP1256"  },
+    { "az",    "CP1251"  },
+    { "az",    "CP1254"  },
+    { "be",    "CP1251"  },
+    { "bg",    "CP1251"  },
+    { "cs",    "CP1250"  },
+    { "cy",    "CP28604" },
+    { "el",    "CP1253"  },
+    { "et",    "CP1257"  },
+    { "fa",    "CP1256"  },
+    { "he",    "CP1255"  },
+    { "hr",    "CP1250"  },
+    { "hu",    "CP1250"  },
+    { "ja",    "CP932"   },
+    { "kk",    "CP1251"  },
+    { "ko",    "CP949"   },
+    { "ky",    "CP1251"  },
+    { "lt",    "CP1257"  },
+    { "lv",    "CP1257"  },
+    { "mk",    "CP1251"  },
+    { "mn",    "CP1251"  },
+    { "pl",    "CP1250"  },
+    { "ro",    "CP1250"  },
+    { "ru",    "CP1251"  },
+    { "sk",    "CP1250"  },
+    { "sl",    "CP1250"  },
+    { "sq",    "CP1250"  },
+    { "sr",    "CP1250"  },
+    { "sr",    "CP1251"  },
+    { "th",    "CP874"   },
+    { "tr",    "CP1254"  },
+    { "tt",    "CP1251"  },
+    { "uk",    "CP1251"  },
+    { "ur",    "CP1256"  },
+    { "uz",    "CP1251"  },
+    { "uz",    "CP1254"  },
+    { "vi",    "CP1258"  },
+    { "zh_CN", "CP936"   },
+    { "zh_HK", "CP950"   },
+    { "zh_MO", "CP950"   },
+    { "zh_SG", "CP936"   },
+    { "zh_TW", "CP950"   },
+    { NULL,    NULL      }
 };
-
-static int
-encoding_item_cmp(const void* a, const void* b)
-{
-    struct encoding_item* item = (struct encoding_item*)b;
-    int len = strlen(item->locale);
-    return strncmp(a, item->locale, len);
-}
-
-static const char*
-get_default_encoding()
-{
-    char* locale = setlocale(LC_CTYPE, NULL);
-    if (locale != NULL) {
-	struct encoding_item* res;
-	res = bsearch(locale,
-		      default_encoding_list,
-		      G_N_ELEMENTS(default_encoding_list),
-		      sizeof(default_encoding_list[0]),
-		      encoding_item_cmp);
-	if (res != NULL) {
-	    return res->encoding;
-	}
-    }
-
-    return NULL;
-}
 
 static gboolean
 candidate_list_has_item(GPtrArray* array, const char* str)
@@ -114,6 +121,31 @@ candidate_list_has_item(GPtrArray* array, const char* str)
     return FALSE;
 }
 
+static void
+candidate_list_add_default_encoding(GPtrArray* array, const char* basename)
+{
+    char* locale = setlocale(LC_CTYPE, NULL);
+    if (locale != NULL) {
+	const struct encoding_item* item = default_encoding_list;
+	while (item->locale != NULL) {
+	    size_t len = strlen(item->locale);
+	    if (strncmp(item->locale, locale, len) == 0) {
+		char* new_name = g_convert(basename, -1,
+				"UTF-8", item->encoding, NULL, NULL, NULL);
+		if (new_name != NULL) {
+		    char* locale_filename;
+		    locale_filename = g_filename_from_utf8(new_name, -1, 
+						   NULL, NULL, NULL);
+		    if (locale_filename != NULL) {
+			g_ptr_array_add(array, new_name);
+			g_free(locale_filename);
+		    }
+		}
+	    }
+	    item++;
+	}
+    }
+}
 
 static GPtrArray*
 create_candidate_list(NautilusFileInfo* info)
@@ -147,27 +179,13 @@ create_candidate_list(NautilusFileInfo* info)
 	    // UTF-8 encoded form of U+FFFD is "\357\277\275"
 	    replacement = strstr(displayname, "\357\277\275");
 	    if (replacement != NULL) {
-		const char* encoding;
 		char* new_name;
 		int i;
 
 		if (array == NULL)
 		    array = g_ptr_array_new();
 
-		encoding = get_default_encoding();
-		if (encoding != NULL) {
-		    new_name = g_convert(basename, -1,
-				"UTF-8", encoding, NULL, NULL, NULL);
-		    if (new_name != NULL) {
-			char* locale_filename;
-			locale_filename = g_filename_from_utf8(new_name, -1, 
-						       NULL, NULL, NULL);
-			if (locale_filename != NULL) {
-			    g_ptr_array_add(array, new_name);
-			    g_free(locale_filename);
-			}
-		    }
-		}
+		candidate_list_add_default_encoding(array, basename);
 
 		for (i = 0; encoding_list[i] != NULL; i++) {
 		    new_name = g_convert(basename, -1,
