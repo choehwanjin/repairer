@@ -4,12 +4,11 @@
 # Choe Hwanjin <choe.hwanjin@gmail.com>, 2008
 #
 # Translated in italian by Gabriele Monti <psicus78@gmail.com>
-
 msgid ""
 msgstr ""
 "Project-Id-Version: nautilus filename repairer 0.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-15 00:32+0900\n"
+"POT-Creation-Date: 2008-01-22 22:57+0900\n"
 "PO-Revision-Date: 2008-01-13 02:07+ZONE\n"
 "Last-Translator: Choe Hwanjin <choe.hwanjin@gmail.com>\n"
 "Language-Team: ko <ko@li.org>\n"
@@ -17,30 +16,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/nautilus-filename-repairer.c:245
+#: ../src/nautilus-filename-repairer.c:267
 #, c-format
 msgid "A file named \"%s\" already exists.  Do you want to replace it?"
 msgstr "Un file di nome \"%s\" esiste già. Vuoi sostituirlo?"
 
-#: ../src/nautilus-filename-repairer.c:307
+#: ../src/nautilus-filename-repairer.c:329
 #, c-format
 msgid "Re_name as \"%s\""
 msgstr "Ri_nomina il file come \"%s\""
 
-#: ../src/nautilus-filename-repairer.c:308
+#: ../src/nautilus-filename-repairer.c:330
 #, c-format
 msgid "Rename as \"%s\"."
 msgstr "Rinomina il file come \"%s\""
 
-#: ../src/nautilus-filename-repairer.c:332
+#: ../src/nautilus-filename-repairer.c:354
 msgid "Select a filename"
 msgstr "Scegli un nome per il file"
 
-#: ../src/nautilus-filename-repairer.c:333
+#: ../src/nautilus-filename-repairer.c:355
 msgid "Select a filename from sub menu items."
 msgstr "Scegli un nome tra quelli del sottomenu"
 
-#: ../src/nautilus-filename-repairer.c:342
+#: ../src/nautilus-filename-repairer.c:364
 #, c-format
 msgid "Rename as \"%s\""
 msgstr "Rinomina il file come \"%s\""
