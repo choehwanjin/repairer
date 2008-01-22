@@ -1,0 +1,7 @@
+Filename Repairer 0.0.2
+ * update supported locales
+ * add URL decoding feature
+ * add Italian translation by Gabriele Monti <psicus78@gmail.com>
+
+Filename Repairer 0.0.1
+ * first release
