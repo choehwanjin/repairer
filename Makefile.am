@@ -11,5 +11,6 @@ DISTCLEANFILES = \
         intltool-update \
         intltool-merge
 
+.PHONY: ChangeLog
 ChangeLog:
 	svn2cl --include-rev --break-before-msg=2 --authors=svnauthors
