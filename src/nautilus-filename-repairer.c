@@ -42,12 +42,11 @@ static GType filename_repairer_type = 0;
 // string is not exist
 static const char* encoding_list[] = {
     "CP1252",  // Latin I  (default encoding)
-    "CP874",   // Thai
-    "CP932",   // Japanese Shift-JIS
     "CP936",   // Simplified Chinese GBK
+    "CP1250",  // Central Europe
+    "CP932",   // Japanese Shift-JIS
     "CP949",   // Korean
     "CP950",   // Traditional Chinese Big5
-    "CP1250",  // Central Europe
     "CP1251",  // Cyrillic
     "CP1253",  // Greek
     "CP1254",  // Turkish
@@ -55,6 +54,7 @@ static const char* encoding_list[] = {
     "CP1256",  // Arabic
     "CP1257",  // Baltic
     "CP1258",  // Vietnam
+    "CP874",   // Thai
     NULL
 };
 
