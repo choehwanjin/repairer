@@ -162,7 +162,8 @@ create_candidate_list(NautilusFileInfo* info)
 	    char* replacement;
 
 	    unescaped_filename = gnome_vfs_unescape_string(filename, NULL);
-	    if (unescaped_filename != NULL) {
+	    if (unescaped_filename != NULL &&
+		strcmp(filename, unescaped_filename) != 0) {
 		basename = g_path_get_basename(unescaped_filename);
 		if (g_utf8_validate(basename, -1, NULL)) {
 		    array = g_ptr_array_new();
