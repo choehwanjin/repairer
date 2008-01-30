@@ -4,7 +4,7 @@ INCLUDES = \
 	$(DISABLE_DEPRECATED_CFLAGS)          \
 	$(NAUTILUS_CFLAGS)
 
-nautilus_extensiondir=$(libdir)/nautilus/extensions-1.0
+nautilus_extensiondir=$(NAUTILUS_EXTENSION_DIR)
 nautilus_extension_LTLIBRARIES=libnautilus-filename-repairer.la
 
 libnautilus_filename_repairer_la_SOURCES =    \

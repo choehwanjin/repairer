@@ -28,9 +28,22 @@ PKG_CHECK_MODULES(NAUTILUS, libnautilus-extension >= $NAUTILUS_REQUIRED gtk+-2.0
 AC_SUBST(NAUTILUS_CFLAGS)
 AC_SUBST(NAUTILUS_LIBS)
 
-PKG_CHECK_MODULES(nautilus_version_check, libnautilus-extension <= 2.20.0, [
-AC_DEFINE_UNQUOTED(NEED_NAUTILUS_WORK_AROUND, 1, [nautilus work around])
-])
+AC_ARG_WITH(nautilus-extension-dir,
+	      [AS_HELP_STRING([--with-nautilus-extension-dir],
+		    [specify the nautilus extension directory])])
+
+AC_MSG_CHECKING([for nautilus extension directory])
+if test -n "$with_nautilus_extension_dir"; then
+    NAUTILUS_EXTENSION_DIR=$with_nautilus_extension_dir
+else
+    NAUTILUS_EXTENSION_DIR=`$PKG_CONFIG --variable=extensiondir libnautilus-extension`
+fi
+if test -z "$NAUTILUS_EXTENSION_DIR"; then
+    NAUTILUS_EXTENSION_DIR='${exec_prefix}/lib/nautilus/extension-1.0'
+fi
+
+AC_MSG_RESULT([${NAUTILUS_EXTENSION_DIR}])
+AC_SUBST(NAUTILUS_EXTENSION_DIR)
 
 AC_CONFIG_FILES([Makefile
 		 src/Makefile
