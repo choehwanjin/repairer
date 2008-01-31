@@ -1,3 +1,7 @@
+Filename Repairer 0.0.3
+ * small bug fix
+ * auto detecting nautilus extension directory
+
 Filename Repairer 0.0.2
  * update supported locales
  * add URL decoding feature

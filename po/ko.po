@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nautilus filename repairer 0.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-22 22:57+0900\n"
+"POT-Creation-Date: 2008-01-31 10:58+0900\n"
 "PO-Revision-Date: 2008-01-13 02:07+ZONE\n"
 "Last-Translator: Choe Hwanjin <choe.hwanjin@gmail.com>\n"
 "Language-Team: ko <ko@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/nautilus-filename-repairer.c:267
+#: ../src/nautilus-filename-repairer.c:276
 #, c-format
 msgid "A file named \"%s\" already exists.  Do you want to replace it?"
 msgstr "이름이 \"%s\"인 파일이 이미 있습니다. 바꾸시겠습니까?"
 
-#: ../src/nautilus-filename-repairer.c:329
+#: ../src/nautilus-filename-repairer.c:338
 #, c-format
 msgid "Re_name as \"%s\""
 msgstr "\"%s\"(으)로 이름 바꾸기(_N)"
 
-#: ../src/nautilus-filename-repairer.c:330
+#: ../src/nautilus-filename-repairer.c:339
 #, c-format
 msgid "Rename as \"%s\"."
 msgstr "\"%s\"(으)로 이름을 바꿉니다."
 
-#: ../src/nautilus-filename-repairer.c:354
+#: ../src/nautilus-filename-repairer.c:363
 msgid "Select a filename"
 msgstr "파일이름 선택"
 
-#: ../src/nautilus-filename-repairer.c:355
+#: ../src/nautilus-filename-repairer.c:364
 msgid "Select a filename from sub menu items."
 msgstr "서브메뉴에서 파일이름을 고릅니다."
 
-#: ../src/nautilus-filename-repairer.c:364
+#: ../src/nautilus-filename-repairer.c:373
 #, c-format
 msgid "Rename as \"%s\""
 msgstr "\"%s\"(으)로 이름 바꾸기"
