@@ -5,6 +5,10 @@
 #include <config.h>
 #endif
 
+/* remove warning */
+#undef _
+#undef N_
+
 #ifdef ENABLE_NLS
 
 #include <libintl.h>
