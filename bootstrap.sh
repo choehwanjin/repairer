@@ -1,7 +1,8 @@
 #!/bin/sh
 
-libtoolize --copy
-intltoolize --copy
+libtoolize --copy --force
+glib-gettextize --copy --force
+intltoolize --copy --force --automake
 aclocal
 autoheader
 automake --add-missing --copy
