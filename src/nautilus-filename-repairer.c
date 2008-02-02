@@ -63,6 +63,20 @@ static const char* encoding_list[] = {
     "CP1257",  // Baltic
     "CP1258",  // Vietnam
     "CP874",   // Thai
+    "CP737",   // Greek
+    "CP850",   // "Multilingual (Latin-1)" (Western European languages)
+    "CP852",   // "Slavic (Latin-2)" (Eastern European languages)
+    "CP855",   // Cyrillic
+    "CP857",   // Turkish
+    "CP858",   // "Multilingual" with euro symbol
+    "CP860",   // Portuguese
+    "CP861",   // Icelandic
+    "CP863",   // French Canadian
+    "CP865",   // Nordic
+    "CP862",   // Hebrew
+    "CP866",   // Cyrillic
+    "CP869",   // Greek
+    "CP437",   // The original IBM PC code page
     NULL
 };
 
