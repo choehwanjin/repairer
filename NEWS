@@ -1,3 +1,7 @@
+Filename Repairer 0.0.4
+ * add some old DOS codepages to filename list
+ * add Spanish translation by Francisco Javier Cuadrado <fcocuadrado@gmail.com>
+
 Filename Repairer 0.0.3
  * small bug fix
  * auto detecting nautilus extension directory
