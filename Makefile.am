@@ -13,9 +13,10 @@ DISTCLEANFILES = \
 
 DISTCHECK_CONFIGURE_FLAGS = --with-nautilus-extension-dir=$${dc_install_base}/lib/nautilus/extension-1.0
 
-ChangeLog:
+.PHONY: log
+log:
 	@if test -d .svn ; then \
 		svn2cl --include-rev --break-before-msg=2 --authors=svnauthors ; \
 	else \
-		touch $@ ; \
+		touch ChangeLog ; \
 	fi
