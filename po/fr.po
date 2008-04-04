@@ -24,7 +24,7 @@ msgstr "Un fichier nommé \"%s\" existe déjà. Voulez-vous le remplacer ?"
 #: ../src/nautilus-filename-repairer.c:338
 #, c-format
 msgid "Re_name as \"%s\""
-msgstr "Renommer comme \"%s\""
+msgstr "Re_nommer comme \"%s\""
 
 #: ../src/nautilus-filename-repairer.c:339
 #, c-format
