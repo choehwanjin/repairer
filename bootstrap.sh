@@ -1,5 +1,6 @@
 #!/bin/sh
 
+touch ChangeLog
 libtoolize --copy --force
 intltoolize --copy --force --automake
 aclocal
