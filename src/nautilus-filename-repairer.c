@@ -29,10 +29,10 @@
 #include <locale.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 #include <gtk/gtk.h>
 
 #include <libgnome/libgnome.h>
-#include <libgnomevfs/gnome-vfs.h>
 #include <libnautilus-extension/nautilus-menu-provider.h>
 
 #include "nautilus-filename-repairer.h"
@@ -174,30 +174,40 @@ candidate_list_add_default_encoding(GPtrArray* array, const char* basename)
 static GPtrArray*
 create_candidate_list(NautilusFileInfo* info)
 {
+    gboolean islocal;
     GPtrArray* array = NULL;
 
-    char* uri = nautilus_file_info_get_uri(info);
-    if (g_str_has_prefix(uri, "file:")) {
-	char* filename = gnome_vfs_get_local_path_from_uri(uri);
+    GFile* gfile = nautilus_file_info_get_location(info);
+    islocal = g_file_has_uri_scheme(gfile, "file");
+    if (islocal) {
+	char* filename = g_file_get_basename(gfile);
 	if (filename != NULL) {
 	    char* unescaped_filename;
-	    char* basename;
 	    char* displayname;
 	    char* replacement;
 
-	    unescaped_filename = gnome_vfs_unescape_string(filename, NULL);
-	    if (unescaped_filename != NULL &&
-		strcmp(filename, unescaped_filename) != 0) {
-		basename = g_path_get_basename(unescaped_filename);
-		if (g_utf8_validate(basename, -1, NULL)) {
-		    array = g_ptr_array_new();
-		    g_ptr_array_add(array, g_strdup(basename));
+	    /* test for URI encoded filenames */
+	    unescaped_filename = g_uri_unescape_string(filename, NULL);
+	    if (unescaped_filename != NULL) {
+		if (strcmp(filename, unescaped_filename) != 0) {
+		    /* if the unescaped filename is valid UTF-8,
+		     * then only the unescaped filename will be added
+		     * but if not, unescaped filename must be in legacy
+		     * encoding, so we should examine its encoding */
+		    if (g_utf8_validate(unescaped_filename, -1, NULL)) {
+			array = g_ptr_array_new();
+			g_ptr_array_add(array, g_strdup(unescaped_filename));
+		    } else {
+			/* exchange the filename with unescaped name 
+			 * to examine encoding of unescaped_filename */
+			g_free(filename);
+			filename = g_strdup(unescaped_filename);
+		    }
 		}
-	    } else {
-		basename = g_path_get_basename(filename);
+		g_free(unescaped_filename);
 	    }
 
-	    displayname = g_filename_display_name(basename);
+	    displayname = g_filename_display_name(filename);
 	    // search for U+FFFD (the Unicode replacement char)
 	    // if the filename has wrong char, displayname may have U+FFFD
 	    // UTF-8 encoded form of U+FFFD is "\357\277\275"
@@ -209,10 +219,10 @@ create_candidate_list(NautilusFileInfo* info)
 		if (array == NULL)
 		    array = g_ptr_array_new();
 
-		candidate_list_add_default_encoding(array, basename);
+		candidate_list_add_default_encoding(array, filename);
 
 		for (i = 0; encoding_list[i] != NULL; i++) {
-		    new_name = g_convert(basename, -1,
+		    new_name = g_convert(filename, -1,
 			"UTF-8", encoding_list[i], NULL, NULL, NULL);
 		    if (new_name != NULL) {
 			char* locale_filename;
@@ -231,12 +241,10 @@ create_candidate_list(NautilusFileInfo* info)
 	    }
 
 	    g_free(displayname);
-	    g_free(basename);
-	    g_free(unescaped_filename);
 	    g_free(filename);
 	}
     }
-    g_free(uri);
+    g_object_unref(gfile);
     
     return array;
 }
@@ -263,25 +271,22 @@ filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
 {
     guint candidate_index;
 
-    char* old_text_uri;
     char* new_filename;
-    GnomeVFSURI* parent_uri;
-    GnomeVFSURI* old_uri;
-    GnomeVFSURI* new_uri;
+    GFile* gfile_parent;
+    GFile* gfile_old;
+    GFile* gfile_new;
 
     candidate_index = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "candidate_index"));
     new_filename = g_filename_from_utf8(args->candidates->pdata[candidate_index],
 					 -1, NULL, NULL, NULL);
 
-    old_text_uri = nautilus_file_info_get_uri(args->files->data);
-    old_uri = gnome_vfs_uri_new(old_text_uri);
-    parent_uri = gnome_vfs_uri_get_parent(old_uri);
-    new_uri = gnome_vfs_uri_append_file_name(parent_uri, new_filename);
+    gfile_old = nautilus_file_info_get_location(args->files->data);
+    gfile_parent = g_file_get_parent(gfile_old);
+    gfile_new = g_file_get_child(gfile_parent, new_filename);
 
-    g_free(old_text_uri);
     g_free(new_filename);
 
-    if (gnome_vfs_uri_exists(new_uri)) {
+    if (g_file_query_exists(gfile_new, NULL)) {
 	gint result;
 	GtkWidget *dialog;
 
@@ -295,15 +300,19 @@ filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
 	gtk_widget_destroy(dialog);
 
 	if (result == GTK_RESPONSE_OK) {
-	    gnome_vfs_move_uri(old_uri, new_uri, TRUE);
+	    g_file_move(gfile_old, gfile_new,
+			G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
+			NULL, NULL, NULL, NULL);
 	}
     } else {
-	gnome_vfs_move_uri(old_uri, new_uri, TRUE);
+	g_file_move(gfile_old, gfile_new,
+		    G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
+		    NULL, NULL, NULL, NULL);
     }
 
-    gnome_vfs_uri_unref(old_uri);
-    gnome_vfs_uri_unref(new_uri);
-    gnome_vfs_uri_unref(parent_uri);
+    g_object_unref(gfile_parent);
+    g_object_unref(gfile_new);
+    g_object_unref(gfile_old);
 }
 
 static char*
