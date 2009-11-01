@@ -40,12 +40,6 @@
 
 static GType filename_repairer_type = 0;
 
-static int nautilus_version_major = NAUTILUS_VERSION_MAJOR;
-static int nautilus_version_minor = NAUTILUS_VERSION_MINOR;
-static int nautilus_version_micro = NAUTILUS_VERSION_MICRO;
-
-static gboolean use_nautilus_submenu_workaround = FALSE; 
-
 // from http://www.microsoft.com/globaldev/reference/wincp.mspx
 // Code Pages Supported by Windows
 // The first item will be selected as a default encoding if the matching locale
@@ -403,10 +397,6 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
 			     G_CALLBACK(filename_repairer_callback),
 			     args);
 	    nautilus_menu_append_item(submenu, item);
-	    /* this code is a workaround for a bug of nautilus
-	     * See: http://bugzilla.gnome.org/show_bug.cgi?id=508878 */
-	    if (use_nautilus_submenu_workaround)
-		items = g_list_append(items, item);
 
 	    g_free(filename);
 	    g_free(label);
@@ -473,25 +463,6 @@ nautilus_filename_repairer_register_type(GTypeModule *module)
 
 void  nautilus_filename_repairer_on_module_init(void)
 {
-    GnomeProgram* program;
-
-    program = gnome_program_get();
-    if (program != NULL) {
-	const char* version;
-
-	version = gnome_program_get_app_version(program);
-	if (version != NULL) {
-	    sscanf(version, "%d.%d.%d", 
-		    &nautilus_version_major,
-		    &nautilus_version_minor,
-		    &nautilus_version_micro);
-	}
-    }
-
-    if (nautilus_version_major < 2 ||
-	(nautilus_version_major == 2 && nautilus_version_minor <= 20)) {
-	use_nautilus_submenu_workaround = TRUE; 
-    }
 }
 
 void  nautilus_filename_repairer_on_module_shutdown(void)
