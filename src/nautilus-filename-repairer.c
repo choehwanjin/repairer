@@ -260,17 +260,40 @@ filename_repairer_callback_args_free(gpointer data, GClosure* closure)
 }
 
 static void
+show_error_message(GtkWidget* parent, const char* filename, GError* error)
+{
+    gint result;
+    GtkWidget *dialog;
+
+    dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW(parent),
+		GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
+		GTK_MESSAGE_ERROR,
+		GTK_BUTTONS_CLOSE,
+		_("An error accurs while renaming the file to \"%s\":\n\n"
+		  "<span weight=\"bold\" size=\"larger\">%s</span>"),
+		filename,
+		error->message
+		);
+    result = gtk_dialog_run(GTK_DIALOG (dialog));
+    gtk_widget_destroy(dialog);
+}
+
+static void
 filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
 {
+    gboolean res;
+    GError* error = NULL;
     guint candidate_index;
 
+    char* new_utf8_filename;
     char* new_filename;
     GFile* gfile_parent;
     GFile* gfile_old;
     GFile* gfile_new;
 
     candidate_index = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "candidate_index"));
-    new_filename = g_filename_from_utf8(args->candidates->pdata[candidate_index],
+    new_utf8_filename = (char*)args->candidates->pdata[candidate_index];
+    new_filename = g_filename_from_utf8(new_utf8_filename,
 					 -1, NULL, NULL, NULL);
 
     gfile_old = nautilus_file_info_get_location(args->files->data);
@@ -279,28 +302,37 @@ filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
 
     g_free(new_filename);
 
-    if (g_file_query_exists(gfile_new, NULL)) {
-	gint result;
-	GtkWidget *dialog;
+    res = g_file_move(gfile_old, gfile_new,
+		G_FILE_COPY_NOFOLLOW_SYMLINKS,
+		NULL, NULL, NULL, &error);
+    if (!res) {
+	    show_error_message(args->parent, new_utf8_filename, error);
+	if (error->code == G_IO_ERROR_EXISTS) {
+	    gint result;
+	    GtkWidget *dialog;
 
-	dialog = gtk_message_dialog_new(GTK_WINDOW(args->parent),
-		    GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
-		    GTK_MESSAGE_QUESTION,
-		    GTK_BUTTONS_OK_CANCEL,
-		    _("A file named \"%s\" already exists.  Do you want to replace it?"),
-		    (char*)args->candidates->pdata[candidate_index]);
-	result = gtk_dialog_run(GTK_DIALOG (dialog));
-	gtk_widget_destroy(dialog);
+	    dialog = gtk_message_dialog_new(GTK_WINDOW(args->parent),
+			GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
+			GTK_MESSAGE_QUESTION,
+			GTK_BUTTONS_OK_CANCEL,
+			_("A file named \"%s\" already exists.  Do you want to replace it?"),
+			new_utf8_filename);
+	    result = gtk_dialog_run(GTK_DIALOG (dialog));
+	    gtk_widget_destroy(dialog);
 
-	if (result == GTK_RESPONSE_OK) {
-	    g_file_move(gfile_old, gfile_new,
+	    if (result == GTK_RESPONSE_OK) {
+		GError* error2 = NULL;
+		res = g_file_move(gfile_old, gfile_new,
 			G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
-			NULL, NULL, NULL, NULL);
+			NULL, NULL, NULL, &error2);
+		if (!res) {
+		    show_error_message(args->parent, new_utf8_filename, error2);
+		}
+	    }
+	} else {
+	    show_error_message(args->parent, new_utf8_filename, error);
 	}
-    } else {
-	g_file_move(gfile_old, gfile_new,
-		    G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
-		    NULL, NULL, NULL, NULL);
+	g_error_free(error);
     }
 
     g_object_unref(gfile_parent);
@@ -338,6 +370,7 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
     char*             label;
     char*             tooltip;
     char*             filename;
+    RepairCallbackArgs* args;
 
     if (g_list_length(files) != 1)
 	return NULL;
@@ -355,8 +388,6 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
     name    = "NautilusFilenameRepairer::rename_as_0";
     label   = g_strdup_printf(_("Re_name as \"%s\""), filename);
     tooltip = g_strdup_printf(_("Rename as \"%s\"."), (char*)array->pdata[0]);
-
-    RepairCallbackArgs* args;
 
     args = g_new(RepairCallbackArgs, 1);
     args->candidates = array;
