@@ -32,7 +32,6 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
-#include <libgnome/libgnome.h>
 #include <libnautilus-extension/nautilus-menu-provider.h>
 
 #include "nautilus-filename-repairer.h"
