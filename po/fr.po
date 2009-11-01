@@ -2,13 +2,13 @@
 # This file is distributed under the same license as the
 # nautilus-filename-repairer package.
 # Choe Hwanjin <choe.hwanjin@gmail.com>, 2008
-#
+# 
 # Translated in french by Christophe Benz <christophe.benz@gmail.com>
 msgid ""
 msgstr ""
 "Project-Id-Version: nautilus filename repairer 0.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-30 01:24+0100\n"
+"POT-Creation-Date: 2009-11-01 14:53+0900\n"
 "PO-Revision-Date: 2008-03-31 10:12+0100\n"
 "Last-Translator: Christophe Benz <christophe.benz@gmail.com>\n"
 "Language-Team: \n"
@@ -16,31 +16,38 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/nautilus-filename-repairer.c:276
+#: ../src/nautilus-filename-repairer.c:272
+#, c-format
+msgid ""
+"An error accurs while renaming the file to \"%s\":\n"
+"\n"
+"<span weight=\"bold\" size=\"larger\">%s</span>"
+msgstr ""
+
+#: ../src/nautilus-filename-repairer.c:318
 #, c-format
 msgid "A file named \"%s\" already exists.  Do you want to replace it?"
 msgstr "Un fichier nommé \"%s\" existe déjà. Voulez-vous le remplacer ?"
 
-#: ../src/nautilus-filename-repairer.c:338
+#: ../src/nautilus-filename-repairer.c:389
 #, c-format
 msgid "Re_name as \"%s\""
 msgstr "Re_nommer comme \"%s\""
 
-#: ../src/nautilus-filename-repairer.c:339
+#: ../src/nautilus-filename-repairer.c:390
 #, c-format
 msgid "Rename as \"%s\"."
 msgstr "Renommer comme \"%s\""
 
-#: ../src/nautilus-filename-repairer.c:363
+#: ../src/nautilus-filename-repairer.c:412
 msgid "Select a filename"
 msgstr "Sélectionner un nom de fichier"
 
-#: ../src/nautilus-filename-repairer.c:364
+#: ../src/nautilus-filename-repairer.c:413
 msgid "Select a filename from sub menu items."
 msgstr "Sélectionner un nom de fichier depuis un sous-menu."
 
-#: ../src/nautilus-filename-repairer.c:373
+#: ../src/nautilus-filename-repairer.c:422
 #, c-format
 msgid "Rename as \"%s\""
 msgstr "Renommer comme \"%s\""
-

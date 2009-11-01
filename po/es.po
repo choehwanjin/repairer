@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nautilus-filename-repairer 0.0.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-31 10:58+0900\n"
+"POT-Creation-Date: 2009-11-01 14:53+0900\n"
 "PO-Revision-Date: 2008-09-27 23:07+0100\n"
 "Last-Translator: Francisco Javier Cuadrado <fcocuadrado@gmail.com>\n"
 "Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
@@ -17,31 +17,38 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/nautilus-filename-repairer.c:276
+#: ../src/nautilus-filename-repairer.c:272
+#, c-format
+msgid ""
+"An error accurs while renaming the file to \"%s\":\n"
+"\n"
+"<span weight=\"bold\" size=\"larger\">%s</span>"
+msgstr ""
+
+#: ../src/nautilus-filename-repairer.c:318
 #, c-format
 msgid "A file named \"%s\" already exists.  Do you want to replace it?"
 msgstr "Ya existe un archivo llamado «%s». ¿Desea sobreescribirlo?"
 
-#: ../src/nautilus-filename-repairer.c:338
+#: ../src/nautilus-filename-repairer.c:389
 #, c-format
 msgid "Re_name as \"%s\""
 msgstr "Re_nombrar como «%s»"
 
-#: ../src/nautilus-filename-repairer.c:339
+#: ../src/nautilus-filename-repairer.c:390
 #, c-format
 msgid "Rename as \"%s\"."
 msgstr "Renombrar como «%s»"
 
-#: ../src/nautilus-filename-repairer.c:363
+#: ../src/nautilus-filename-repairer.c:412
 msgid "Select a filename"
 msgstr "Seleccione un nombre para el archivo"
 
-#: ../src/nautilus-filename-repairer.c:364
+#: ../src/nautilus-filename-repairer.c:413
 msgid "Select a filename from sub menu items."
 msgstr "Seleccione un nombre para el archivo desde el sub-menú."
 
-#: ../src/nautilus-filename-repairer.c:373
+#: ../src/nautilus-filename-repairer.c:422
 #, c-format
 msgid "Rename as \"%s\""
 msgstr "Renombrar como «%s»"
-
