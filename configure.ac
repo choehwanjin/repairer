@@ -1,4 +1,4 @@
-AC_INIT([nautilus-filename-repairer], [0.0.5], [choe.hwanjin@gmail.com], [nautilus-filename-repairer])
+AC_INIT([nautilus-filename-repairer], [0.0.6], [choe.hwanjin@gmail.com], [nautilus-filename-repairer])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE([dist-bzip2])
