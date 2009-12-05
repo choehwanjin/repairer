@@ -1,18 +1,18 @@
 # nautilus-filename-repairer po translation to Spanish
-# Copyright (C) 2008 Choe Hwanjin <choe.hwanjin@gmail.com>
+# Copyright (C) 2008, 2009 Choe Hwanjin <choe.hwanjin@gmail.com>
 # This file is distributed under the same license as the nautilus-filename-repairer package.
 #
-#  - Initial translation
-#       Francisco Javier Cuadrado <fcocuadrado@gmail.com>
+#   - Initial translation
+#       Francisco Javier Cuadrado <fcocuadrado@gmail.com>, 2008-2009
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: nautilus-filename-repairer 0.0.5\n"
+"Project-Id-Version: nautilus-filename-repairer 0.0.6\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-01 14:53+0900\n"
-"PO-Revision-Date: 2008-09-27 23:07+0100\n"
+"PO-Revision-Date: 2009-12-04 16:41+0100\n"
 "Last-Translator: Francisco Javier Cuadrado <fcocuadrado@gmail.com>\n"
-"Language-Team: Debian Spanish <debian-l10n-spanish@lists.debian.org>\n"
+"Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -24,6 +24,9 @@ msgid ""
 "\n"
 "<span weight=\"bold\" size=\"larger\">%s</span>"
 msgstr ""
+"Se produjo un error mientras se estaba renombrando el archivo a «%s»:\n"
+"\n"
+"<span weight=\"bold\" size=\"larger\">%s</span>"
 
 #: ../src/nautilus-filename-repairer.c:318
 #, c-format
@@ -42,13 +45,14 @@ msgstr "Renombrar como «%s»"
 
 #: ../src/nautilus-filename-repairer.c:412
 msgid "Select a filename"
-msgstr "Seleccione un nombre para el archivo"
+msgstr "Escoja un nombre para el archivo"
 
 #: ../src/nautilus-filename-repairer.c:413
 msgid "Select a filename from sub menu items."
-msgstr "Seleccione un nombre para el archivo desde el sub-menú."
+msgstr "Escoja un nombre para el archivo desde el submenú."
 
 #: ../src/nautilus-filename-repairer.c:422
 #, c-format
 msgid "Rename as \"%s\""
 msgstr "Renombrar como «%s»"
+
