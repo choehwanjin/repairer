@@ -231,6 +231,20 @@ create_candidate_list(NautilusFileInfo* info)
 			}
 		    }
 		}
+	    } else {
+		// A filename from MacOSX is usually in NFD.
+		// So, if the filename is not in NFC,
+		// try to make it NFC.
+		gchar* normalized = g_utf8_normalize(filename, -1, G_NORMALIZE_NFC);
+		if (normalized != NULL) {
+		    if (strcmp(filename, normalized) != 0) {
+			if (array == NULL)
+			    array = g_ptr_array_new();
+			g_ptr_array_add(array, normalized);
+		    } else {
+			g_free(normalized);
+		    }
+		}
 	    }
 
 	    g_free(displayname);
