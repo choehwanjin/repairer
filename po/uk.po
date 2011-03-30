@@ -1,0 +1,62 @@
+# Ukrainian translation of "nautilus-filename-repairer"
+#
+# Copyright (C) 2008 Choe Hwanjin
+# This file is distributed under the same license as the
+# nautilus-filename-repairer package.
+# Choe Hwanjin <choe.hwanjin@gmail.com>, 2008
+#
+# Translated to Ukrainian by Serhij Dubyk <serhijdubyk@gmail.com>, 2011
+msgid ""
+msgstr ""
+"Project-Id-Version: nautilus filename repairer 0.0.6\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-11-01 14:53+0900\n"
+"PO-Revision-Date: 2011-03-30 11:16+0300\n"
+"Last-Translator: Serhij Dubyk / Сергій Дубик <dubyk@library.lviv.ua>\n"
+"Language-Team: Ukrainian Linux Team <translation@linux.org.ua>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Ukrainian\n"
+"X-Poedit-Country: UKRAINE\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+#: ../src/nautilus-filename-repairer.c:272
+#, c-format
+msgid ""
+"An error accurs while renaming the file to \"%s\":\n"
+"\n"
+"<span weight=\"bold\" size=\"larger\">%s</span>"
+msgstr ""
+"Трапилася помилка під час перейменування файлу „%s“:\n"
+"\n"
+"<span weight=\"bold\" size=\"larger\">%s</span>"
+
+#: ../src/nautilus-filename-repairer.c:318
+#, c-format
+msgid "A file named \"%s\" already exists.  Do you want to replace it?"
+msgstr "Файл з назвою „%s“ вже існує. Хочете замінити його?"
+
+#: ../src/nautilus-filename-repairer.c:389
+#, c-format
+msgid "Re_name as \"%s\""
+msgstr "_Перейменувати як „%s“"
+
+#: ../src/nautilus-filename-repairer.c:390
+#, c-format
+msgid "Rename as \"%s\"."
+msgstr "Перейменувати як „%s“."
+
+#: ../src/nautilus-filename-repairer.c:412
+msgid "Select a filename"
+msgstr "Виберіть назву для файлу"
+
+#: ../src/nautilus-filename-repairer.c:413
+msgid "Select a filename from sub menu items."
+msgstr "Виберіть правильну назву файлу серед варіантів з підменю."
+
+#: ../src/nautilus-filename-repairer.c:422
+#, c-format
+msgid "Rename as \"%s\""
+msgstr "Перейменувати як „%s“"
+
