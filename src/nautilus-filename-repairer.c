@@ -354,6 +354,63 @@ filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
     g_object_unref(gfile_old);
 }
 
+static void
+on_repair_dialog_activated(NautilusMenuItem* item, gpointer data)
+{
+    GList* files;
+    guint i;
+    guint n;
+    gchar** argv;
+    GError *error = NULL;
+
+    files = (GList*)g_object_get_data(G_OBJECT(item), "Repairer::files");
+
+    n = g_list_length(files);
+    argv = g_new(gchar*, n + 2);
+
+    argv[0] = g_strdup("nautilus-filename-repairer");
+
+    i = 1;
+    while (files != NULL) {
+	GFile* file;
+
+	file = nautilus_file_info_get_location(files->data);
+	argv[i] = g_file_get_path(file);
+	g_object_unref(file);
+
+	files = g_list_next(files);
+	i++;
+    }
+    argv[i] = NULL;
+
+    g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error);
+    g_strfreev(argv);
+}
+
+static NautilusMenuItem*
+repair_dialog_menu_item_new(GList* files)
+{
+    const char* name;
+    const char* label;
+    const char* tooltip;
+    NautilusMenuItem* item;
+
+    name    = "NautilusFilenameRepairer::rename_manully";
+    label   = _("Repair filename ...");
+    tooltip = _("Repair filename");
+
+    files = nautilus_file_info_list_copy(files);
+
+    item = nautilus_menu_item_new(name, label, tooltip, NULL);
+    g_object_set_data_full(G_OBJECT(item), "Repairer::files",
+	    files, (GDestroyNotify) nautilus_file_info_list_free);
+
+    g_signal_connect(G_OBJECT(item), "activate",
+		     G_CALLBACK(on_repair_dialog_activated), NULL);
+
+    return item;
+}
+
 static char*
 get_filename_without_mnemonic(const char* filename)
 {
@@ -371,14 +428,11 @@ get_filename_without_mnemonic(const char* filename)
     return g_string_free(str, FALSE);
 }
 
-static GList *
-nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
-					  GtkWidget            *window,
-					  GList                *files)
+static GList*
+append_repair_menu_items(GList* items, GtkWidget *window, GList *files)
 {
     NautilusMenu*     submenu;
     NautilusMenuItem* item;
-    GList*            items = NULL;
     GPtrArray*        array;
     char*             name;
     char*             label;
@@ -386,16 +440,19 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
     char*             filename;
     RepairCallbackArgs* args;
 
-    if (g_list_length(files) != 1)
-	return NULL;
+    if (files == NULL)
+	return items;
+
+    if (files->next != NULL)
+	return items;
 
     array = create_candidate_list(files->data);
     if (array == NULL)
-	return NULL;
+	return items;
 
     if (array->len == 0) {
 	g_ptr_array_free(array, TRUE);
-	return NULL;
+	return items;
     }
 
     filename = get_filename_without_mnemonic(array->pdata[0]);
@@ -446,6 +503,47 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
 	    g_free(label);
 	    g_free(name);
 	}
+    }
+
+    return items;
+}
+
+static gboolean
+need_repair_dialog(GList* files)
+{
+    char* name;
+    gboolean res;
+
+    while (files != NULL) {
+	if (nautilus_file_info_is_directory(files->data))
+	    return TRUE;
+
+	name = nautilus_file_info_get_name(files->data);
+	res = g_utf8_validate(name, -1, NULL);
+	g_free(name);
+	if (!res)
+	    return TRUE;
+
+	files = g_list_next(files);
+    }
+    
+    return FALSE;
+}
+
+static GList *
+nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
+					  GtkWidget            *window,
+					  GList                *files)
+{
+    NautilusMenuItem* item;
+    GList* items;
+
+    items = NULL;
+    items = append_repair_menu_items(items, window, files);
+
+    if (need_repair_dialog(files)) {
+	item = repair_dialog_menu_item_new(files);
+	items = g_list_append(items, item);
     }
 
     return items;
