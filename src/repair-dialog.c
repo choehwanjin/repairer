@@ -1,4 +1,5 @@
 #include <string.h>
+#include <locale.h>
 #include <gtk/gtk.h>
 
 #include "nautilus-filename-repairer-i18n.h"
@@ -232,6 +233,95 @@ encoding_list_model_new()
     }
 
     return store;
+}
+
+static const char*
+get_codepage_from_current_locale()
+{
+    static const char* codepage_table[][2] = {
+	{ "ar",    "CP1256"  },
+	{ "az",    "CP1251"  },
+	{ "az",    "CP1254"  },
+	{ "be",    "CP1251"  },
+	{ "bg",    "CP1251"  },
+	{ "cs",    "CP1250"  },
+	{ "cy",    "CP1253"  },
+	{ "el",    "CP1253"  },
+	{ "et",    "CP1257"  },
+	{ "fa",    "CP1256"  },
+	{ "he",    "CP1255"  },
+	{ "hr",    "CP1250"  },
+	{ "hu",    "CP1250"  },
+	{ "ja",    "CP932"   },
+	{ "kk",    "CP1251"  },
+	{ "ko",    "CP949"   },
+	{ "ky",    "CP1251"  },
+	{ "lt",    "CP1257"  },
+	{ "lv",    "CP1257"  },
+	{ "mk",    "CP1251"  },
+	{ "mn",    "CP1251"  },
+	{ "pl",    "CP1250"  },
+	{ "ro",    "CP1250"  },
+	{ "ru",    "CP1251"  },
+	{ "sk",    "CP1250"  },
+	{ "sl",    "CP1250"  },
+	{ "sq",    "CP1250"  },
+	{ "sr",    "CP1250"  },
+	{ "sr",    "CP1251"  },
+	{ "th",    "CP874"   },
+	{ "tr",    "CP1254"  },
+	{ "tt",    "CP1251"  },
+	{ "uk",    "CP1251"  },
+	{ "ur",    "CP1256"  },
+	{ "uz",    "CP1251"  },
+	{ "uz",    "CP1254"  },
+	{ "vi",    "CP1258"  },
+	{ "zh_CN", "CP936"   },
+	{ "zh_HK", "CP950"   },
+	{ "zh_MO", "CP950"   },
+	{ "zh_SG", "CP936"   },
+	{ "zh_TW", "CP950"   },
+	{ NULL,    NULL      }
+    };
+
+    int i;
+    const char* locale;
+    size_t len;
+
+    locale = setlocale(LC_CTYPE, NULL);
+    i = 0;
+    while (codepage_table[i][0] != NULL) {
+	len = strlen(codepage_table[i][0]);
+	if (strncmp(codepage_table[i][0], locale, len) == 0) {
+	    return codepage_table[i][1];
+	}
+	i++;
+    }
+
+    return "CP1252";
+}
+
+static void
+select_default_encoding(GtkComboBox* combo, GtkTreeModel* model)
+{
+    GtkTreeIter iter;
+    gboolean res;
+    const char* codepage;
+
+    codepage = get_codepage_from_current_locale();
+
+    res = gtk_tree_model_get_iter_first(model, &iter);
+    while (res) {
+	char* encoding = NULL;
+	gtk_tree_model_get(model, &iter, ENCODING_COLUMN_ENCODING, &encoding, -1);
+	if (strcmp(encoding, codepage) == 0) {
+	    gtk_combo_box_set_active_iter(combo, &iter);
+	    g_free(encoding);
+	    break;
+	}
+	g_free(encoding);
+	res = gtk_tree_model_iter_next(model, &iter);
+    }
 }
 
 static UpdateContext*
@@ -498,9 +588,10 @@ repair_dialog_new(GSList* files)
     combobox = GTK_COMBO_BOX(object);
     gtk_combo_box_set_model(combobox, model);
     g_object_unref(G_OBJECT(model));
+    select_default_encoding(combobox, model);
+    repair_dialog_set_encoding_combo_box(dialog, combobox);
     g_signal_connect(G_OBJECT(combobox), "changed",
 		     G_CALLBACK(on_encoding_changed), dialog);
-    repair_dialog_set_encoding_combo_box(dialog, combobox);
 
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combobox), renderer, TRUE);
