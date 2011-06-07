@@ -49,20 +49,20 @@ static gboolean repair_dialog_on_idle_update(GtkDialog* dialog);
 
 
 static const char* encoding_list[][2] = {
-    { "Thai - CP874",                     "CP874"  },
-    { "Japanese - CP932",                 "CP932"  },
-    { "Chinese simplified - CP936",       "CP936"  },
-    { "Korean - CP949",                   "CP949"  },
-    { "Chinese traditional - CP950",      "CP950"  },
-    { "Central European latin - CP1250",  "CP1250" },
-    { "Cyrillic - CP1251",                "CP1251" },
-    { "Western European latin - CP1252",  "CP1252" },
-    { "Greek - CP1253",                   "CP1253" },
-    { "Turkish - CP1254",                 "CP1254" },
-    { "Hebrew - CP1255",                  "CP1255" },
-    { "Arabic - CP1256",                  "CP1256" },
-    { "Baltic - CP1257",                  "CP1257" },
-    { "Vietnamese - CP1258",              "CP1258" },
+    { N_("Arabic - CP1256"),                  "CP1256" },
+    { N_("Baltic - CP1257"),                  "CP1257" },
+    { N_("Central European latin - CP1250"),  "CP1250" },
+    { N_("Chinese simplified - CP936"),       "CP936"  },
+    { N_("Chinese traditional - CP950"),      "CP950"  },
+    { N_("Cyrillic - CP1251"),                "CP1251" },
+    { N_("Greek - CP1253"),                   "CP1253" },
+    { N_("Hebrew - CP1255"),                  "CP1255" },
+    { N_("Japanese - CP932"),                 "CP932"  },
+    { N_("Korean - CP949"),                   "CP949"  },
+    { N_("Thai - CP874"),                     "CP874"  },
+    { N_("Turkish - CP1254"),                 "CP1254" },
+    { N_("Vietnamese - CP1258"),              "CP1258" },
+    { N_("Western European latin - CP1252"),  "CP1252" },
     { NULL,                               NULL     }
 };
 
@@ -226,7 +226,7 @@ encoding_list_model_new()
     while (encoding_list[i][0] != NULL) {
 	gtk_list_store_append(store, &iter);
 	gtk_list_store_set(store, &iter,
-		ENCODING_COLUMN_LABEL, encoding_list[i][0],
+		ENCODING_COLUMN_LABEL, _(encoding_list[i][0]),
 		ENCODING_COLUMN_ENCODING, encoding_list[i][1],
 		-1);
 	i++;

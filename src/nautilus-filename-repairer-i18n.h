@@ -40,7 +40,7 @@
 #else /* ENABLE_NLS */
 
 #define _(String) (String)
-#define N_(String) (String)
+#define N_(String) String
 #define textdomain(String) (String)
 #define gettext(String) (String)
 #define dgettext(Domain,String) (String)
@@ -49,5 +49,7 @@
 #define bind_textdomain_codeset(Domain,Encoding) (Domain)
 
 #endif /* ENABLE_NLS */
+
+#define gettext_noop(String) String
 
 #endif /* nautils_filename_repairer_i18n_h */
