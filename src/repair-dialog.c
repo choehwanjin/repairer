@@ -108,7 +108,17 @@ get_new_name(const char* name, const char* encoding)
 	return NULL;
 
     if (g_utf8_validate(name, -1, NULL)) {
-	new_name = g_strdup(name);
+	char* unescaped = g_uri_unescape_string(name, NULL);
+	if (g_utf8_validate(unescaped, -1, NULL)) {
+	    // A filename from MacOSX is usually in NFD.
+	    // So, if the filename is not in NFC, try to make it NFC.
+	    char* normalized = g_utf8_normalize(unescaped, -1, G_NORMALIZE_NFC);
+	    new_name = normalized;
+	    g_free(unescaped);
+	} else {
+	    new_name = g_convert(unescaped, -1, "UTF-8", encoding, NULL, NULL, NULL);
+	    g_free(unescaped);
+	}
     } else {
 	new_name = g_convert(name, -1, "UTF-8", encoding, NULL, NULL, NULL);
     }
@@ -127,10 +137,11 @@ convert_filename(GFile* src, const char* encoding)
     GError* error = NULL;
 
     src_name = g_file_get_basename(src);
-    if (g_utf8_validate(src_name, -1, NULL))
-	return;
+    dst_name = get_new_name(src_name, encoding);
+    if (dst_name == NULL) {
+	goto done;
+    }
 
-    dst_name = g_convert(src_name, -1, "UTF-8", encoding, NULL, NULL, NULL);
     if (strcmp(src_name, dst_name) != 0) {
 	parent = g_file_get_parent(src);
 	dst = g_file_get_child(parent, dst_name);
@@ -147,6 +158,7 @@ convert_filename(GFile* src, const char* encoding)
 	g_object_unref(G_OBJECT(dst));
     }
 
+done:
     g_free(src_name);
     g_free(dst_name);
 }
@@ -378,12 +390,7 @@ update_new_name_in_a_row(GtkTreeStore* store, GtkTreeIter* iter, const char* enc
     gtk_tree_model_get(GTK_TREE_MODEL(store), iter,
 	    FILE_COLUMN_NAME, &old_name, -1);
 
-    if (g_utf8_validate(old_name, -1, NULL)) {
-	new_name = g_strdup(old_name);
-    } else {
-	new_name = g_convert(old_name, -1, "UTF-8", encoding, NULL, NULL, NULL);
-    }
-    
+    new_name = get_new_name(old_name, encoding);
     if (new_name != NULL) {
 	gtk_tree_store_set(store, iter, FILE_COLUMN_NEW_NAME, new_name, -1);
 	g_free(new_name);
