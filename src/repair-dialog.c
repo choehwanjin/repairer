@@ -7,6 +7,7 @@
 #define REPAIR_DIALOG_UI PKGDATADIR "/repair-dialog.ui"
 
 enum {
+    FILE_COLUMN_GFILE,
     FILE_COLUMN_NAME,
     FILE_COLUMN_DISPLAY_NAME,
     FILE_COLUMN_NEW_NAME,
@@ -65,15 +66,6 @@ static const char* encoding_list[][2] = {
     { N_("Western European latin - CP1252"),  "CP1252" },
     { NULL,                               NULL     }
 };
-
-static gboolean
-local_g_file_is_directory(GFile* file)
-{
-    GFileType file_type;
-
-    file_type = g_file_query_file_type(file, G_FILE_QUERY_INFO_NONE, NULL);
-    return file_type == G_FILE_TYPE_DIRECTORY;
-}
 
 static char*
 get_display_name(const char* name)
@@ -151,21 +143,18 @@ get_new_name(const char* name, const char* encoding)
 }
 
 static void
-convert_filename(GFile* src, const char* encoding)
+change_filename(GFile* src, const char* dst_name, GtkWidget* parent_window)
 {
     char* src_name;
-    char* dst_name;
     GFile* parent;
     GFile* dst;
     gboolean res;
     GError* error = NULL;
 
-    src_name = g_file_get_basename(src);
-    dst_name = get_new_name(src_name, encoding);
-    if (dst_name == NULL) {
-	goto done;
-    }
+    if (dst_name == NULL)
+	return;
 
+    src_name = g_file_get_basename(src);
     if (strcmp(src_name, dst_name) != 0) {
 	parent = g_file_get_parent(src);
 	dst = g_file_get_child(parent, dst_name);
@@ -173,79 +162,97 @@ convert_filename(GFile* src, const char* encoding)
 	res = g_file_move(src, dst, G_FILE_COPY_NOFOLLOW_SYMLINKS,
 		NULL, NULL, NULL, &error);
 
-	if (res) {
-	} else {
-	    g_print("Error: %s\n", error->message);
+	if (!res) {
+	    GtkWidget* dialog;
+	    char* display_name;
+	    gboolean do_free = FALSE;;
+
+	    if (g_utf8_validate(src_name, -1, NULL)) {
+		display_name = src_name;
+	    } else {
+		display_name = get_display_name(src_name);
+		do_free = TRUE;
+	    }
+
+	    dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW(parent_window),
+                GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL,
+                GTK_MESSAGE_ERROR,
+                GTK_BUTTONS_CLOSE,
+                _("An error accurs while renaming \"%s\" to \"%s\":\n\n"
+                  "<span weight=\"bold\" size=\"larger\">%s</span>"),
+		display_name, dst_name,
+                error->message);
+	    gtk_dialog_run(GTK_DIALOG(dialog));
+	    gtk_widget_destroy(dialog);
+
 	    g_error_free(error);
+
+	    if (do_free)
+		g_free(display_name);
 	}
 
 	g_object_unref(G_OBJECT(dst));
     }
 
-done:
     g_free(src_name);
-    g_free(dst_name);
 }
 
 static void
-convert_dir(GFile* dir, const char* encoding)
+repair_filenames_subdir(GtkTreeModel* model, GtkTreeIter* iterparent,
+	GFile* dir, GtkWidget* parent_window)
 {
-    GFileInfo* info;
+    GtkTreeIter iter;
+    gboolean res;
 
-    GFileEnumerator* e = g_file_enumerate_children(dir,
-	    G_FILE_ATTRIBUTE_STANDARD_NAME ","
-	    G_FILE_ATTRIBUTE_STANDARD_TYPE,
-	    G_FILE_QUERY_INFO_NONE,
-	    NULL, NULL);
-    if (e == NULL)
-	return;
-
-    info = g_file_enumerator_next_file(e, NULL, NULL);
-    while (info != NULL) {
-	const char* name;
-	GFile* child;
-	GFileType file_type;
-
-	name = g_file_info_get_name(info);
-	file_type = g_file_info_get_file_type(info);
-	child = g_file_get_child(dir, name);
-
-	if (file_type == G_FILE_TYPE_DIRECTORY) {
-	    convert_dir(child, encoding);
-	}
-
-	convert_filename(child, encoding);
-
-	g_object_unref(child);
-	g_object_unref(info);
-	
-	info = g_file_enumerator_next_file(e, NULL, NULL);
-    }
-    g_object_unref(e);
-}
-
-static void
-repair_filenames(GSList* files, const char* encoding, gboolean include_subdir)
-{
-    if (encoding == NULL)
-	return;
-
-    while (files != NULL) {
+    res = gtk_tree_model_iter_children(model, &iter, iterparent);
+    while (res) {
+	char* name;
+	char* new_name;
 	GFile* file;
 
-	file = files->data;
+	gtk_tree_model_get(model, &iter, FILE_COLUMN_NAME, &name,
+					 FILE_COLUMN_NEW_NAME, &new_name, -1);
 
-	if (include_subdir) {
-	    gboolean is_dir;
-	    is_dir = local_g_file_is_directory(file);
-	    if (is_dir) {
-		convert_dir(file, encoding);
-	    }
+	file = g_file_get_child(dir, name);
+
+	res = gtk_tree_model_iter_has_child(model, &iter);
+	if (res) {
+	    repair_filenames_subdir(model, &iter, file, parent_window);
 	}
 
-	convert_filename(file, encoding);
+	change_filename(file, new_name, parent_window);
 
-	files = g_slist_next(files);
+	g_free(name);
+	g_free(new_name);
+
+	res = gtk_tree_model_iter_next(model, &iter);
+    }
+}
+
+static void
+repair_filenames(GtkTreeModel* model, GtkWidget* parent_window)
+{
+    GtkTreeIter iter;
+    gboolean res;
+
+    res = gtk_tree_model_get_iter_first(model, &iter);
+    while (res) {
+	GFile* file = NULL;
+	char* new_name = NULL;
+
+	gtk_tree_model_get(model, &iter, FILE_COLUMN_GFILE, &file,
+					 FILE_COLUMN_NEW_NAME, &new_name, -1);
+
+	res = gtk_tree_model_iter_has_child(model, &iter);
+	if (res) {
+	    repair_filenames_subdir(model, &iter, file, parent_window);
+	}
+
+	change_filename(file, new_name, parent_window);
+
+	g_free(new_name);
+
+	res = gtk_tree_model_iter_next(model, &iter);
     }
 }
 
@@ -496,7 +503,7 @@ file_list_model_new(GSList* files, gboolean include_subdir)
     GtkTreeStore* store;
 
     store = gtk_tree_store_new(FILE_NUM_COLUMNS,
-	     G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+	     G_TYPE_POINTER, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
     return store;
 }
@@ -504,33 +511,16 @@ file_list_model_new(GSList* files, gboolean include_subdir)
 static void
 file_list_model_append(GtkTreeStore* store,
 	GtkTreeIter* iter, GtkTreeIter* parent_iter,
-	const char* name, const char* display_name, const char* new_name)
+	GFile* file, const char* name,
+	const char* display_name, const char* new_name)
 {
     gtk_tree_store_append(store, iter, parent_iter);
     gtk_tree_store_set(store, iter,
+	    FILE_COLUMN_GFILE, file,
 	    FILE_COLUMN_NAME, name,
 	    FILE_COLUMN_DISPLAY_NAME, display_name,
 	    FILE_COLUMN_NEW_NAME, new_name,
 	    -1);
-}
-
-static void
-on_dialog_response(GtkDialog* dialog, gint response_id, gpointer data)
-{
-    GSList* files;
-    char* encoding;
-    gboolean include_subdir;
-
-    if (response_id != GTK_RESPONSE_APPLY)
-	return;
-
-    files = repair_dialog_get_file_list(dialog);
-    encoding = repair_dialog_get_current_encoding(dialog);
-    include_subdir = repair_dialog_get_include_subdir_flag(dialog);
-
-    repair_filenames(files,  encoding, include_subdir);
-
-    g_free(encoding);
 }
 
 static void
@@ -601,8 +591,6 @@ repair_dialog_new(GSList* files)
     files = g_slist_copy(files);
     g_slist_foreach(files, (GFunc)g_object_ref, NULL);
     repair_dialog_set_file_list(dialog, files);
-    g_signal_connect(G_OBJECT(dialog), "response",
-		     G_CALLBACK(on_dialog_response), NULL);
     g_signal_connect(G_OBJECT(dialog), "destroy",
 		     G_CALLBACK(on_dialog_destroy), NULL);
 
@@ -672,17 +660,11 @@ repair_dialog_new(GSList* files)
 void
 repair_dialog_do_repair(GtkDialog* dialog)
 {
-    GSList* files;
-    char* encoding;
-    gboolean include_subdir;
+    GtkTreeModel* model;
 
-    files = repair_dialog_get_file_list(dialog);
-    encoding = repair_dialog_get_current_encoding(dialog);
-    include_subdir = repair_dialog_get_include_subdir_flag(dialog);
+    model = GTK_TREE_MODEL(repair_dialog_get_file_list_model(dialog));
 
-    repair_filenames(files, encoding, include_subdir);
-
-    g_free(encoding);
+    repair_filenames(model, GTK_WIDGET(dialog));
 }
 
 static GtkComboBox*
@@ -809,7 +791,7 @@ append_dir(GtkTreeStore* store, GtkTreeIter* parent_iter,
 	GFileType ftype;
 
 	file_list_model_append(store, &iter, parent_iter,
-		name, display_name, new_name);
+		NULL, name, display_name, new_name);
 
 	if (new_name == NULL)
 	    success_all = FALSE;
@@ -886,7 +868,7 @@ repair_dialog_update_file_list_model(GtkDialog* dialog, gboolean async)
 	    new_name = get_new_name(name, encoding);
 
 	    file_list_model_append(store, &iter, NULL,
-		    name, display_name, new_name);
+		    file, name, display_name, new_name);
 	    if (new_name == NULL)
 		success_all = FALSE;
 	    
@@ -968,7 +950,7 @@ repair_dialog_on_idle_update(GtkDialog* dialog)
 		new_name = get_new_name(name_const, context->encoding);
 
 		file_list_model_append(context->store, &iter, parent_iter,
-			name_const, display_name, new_name);
+			NULL, name_const, display_name, new_name);
 		if (new_name == NULL)
 		    context->success_all = FALSE;
 
@@ -1013,7 +995,7 @@ repair_dialog_on_idle_update(GtkDialog* dialog)
 	    new_name = get_new_name(name, context->encoding);
 
 	    file_list_model_append(context->store, &iter, NULL,
-		    name, display_name, new_name);
+		    file, name, display_name, new_name);
 
 	    if (new_name == NULL)
 		context->success_all = FALSE;
