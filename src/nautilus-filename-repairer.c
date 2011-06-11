@@ -45,11 +45,7 @@ static GType filename_repairer_type = 0;
 // string is not exist
 static const char* encoding_list[] = {
     "CP1252",  // Latin I  (default encoding)
-    "CP936",   // Simplified Chinese GBK
     "CP1250",  // Central Europe
-    "CP932",   // Japanese Shift-JIS
-    "CP949",   // Korean
-    "CP950",   // Traditional Chinese Big5
     "CP1251",  // Cyrillic
     "CP1253",  // Greek
     "CP1254",  // Turkish
@@ -58,20 +54,10 @@ static const char* encoding_list[] = {
     "CP1257",  // Baltic
     "CP1258",  // Vietnam
     "CP874",   // Thai
-    "CP737",   // Greek
-    "CP850",   // "Multilingual (Latin-1)" (Western European languages)
-    "CP852",   // "Slavic (Latin-2)" (Eastern European languages)
-    "CP855",   // Cyrillic
-    "CP857",   // Turkish
-    "CP858",   // "Multilingual" with euro symbol
-    "CP860",   // Portuguese
-    "CP861",   // Icelandic
-    "CP863",   // French Canadian
-    "CP865",   // Nordic
-    "CP862",   // Hebrew
-    "CP866",   // Cyrillic
-    "CP869",   // Greek
-    "CP437",   // The original IBM PC code page
+    "CP932",   // Japanese Shift-JIS
+    "CP936",   // Simplified Chinese GBK
+    "CP949",   // Korean
+    "CP950",   // Traditional Chinese Big5
     NULL
 };
 
@@ -87,7 +73,7 @@ static const struct encoding_item default_encoding_list[] = {
     { "be",    "CP1251"  },
     { "bg",    "CP1251"  },
     { "cs",    "CP1250"  },
-    { "cy",    "CP28604" },
+    { "cy",    "CP1253"  },
     { "el",    "CP1253"  },
     { "et",    "CP1257"  },
     { "fa",    "CP1256"  },
@@ -118,11 +104,8 @@ static const struct encoding_item default_encoding_list[] = {
     { "uz",    "CP1251"  },
     { "uz",    "CP1254"  },
     { "vi",    "CP1258"  },
-    { "zh_CN", "CP936"   },
-    { "zh_HK", "CP950"   },
-    { "zh_MO", "CP950"   },
-    { "zh_SG", "CP936"   },
-    { "zh_TW", "CP950"   },
+    { "zh",    "CP936"   },
+    { "zh",    "CP950"   },
     { NULL,    NULL      }
 };
 
