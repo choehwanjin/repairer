@@ -100,9 +100,22 @@ get_display_name(const char* name)
 }
 
 static char*
+get_reconverted_name(const char* str, const char* encoding)
+{
+    // The usual misselected encoding is CP1252
+    char* cp1252 = g_convert(str, -1, "CP1252", "UTF-8", NULL, NULL, NULL);
+    if (cp1252 != NULL) {
+	char* utf8 = g_convert(cp1252, -1, "UTF-8", encoding, NULL, NULL, NULL);
+	g_free(cp1252);
+	return utf8;
+    }
+    return NULL;
+}
+
+static char*
 get_new_name(const char* name, const char* encoding)
 {
-    char* new_name;
+    char* new_name = NULL;
 
     if (encoding == NULL)
 	return NULL;
@@ -113,7 +126,18 @@ get_new_name(const char* name, const char* encoding)
 	    // A filename from MacOSX is usually in NFD.
 	    // So, if the filename is not in NFC, try to make it NFC.
 	    char* normalized = g_utf8_normalize(unescaped, -1, G_NORMALIZE_NFC);
-	    new_name = normalized;
+	    if (normalized != NULL) {
+		// Som filenames are valid UTF-8 form,
+		// but are misconverted with wrong encoding.
+		// In that case, the names are illegible.
+		// So, we try to reconvert it with the user selected encoding
+		new_name = get_reconverted_name(normalized, encoding);
+		if (new_name != NULL) {
+		    g_free(normalized);
+		} else {
+		    new_name = normalized;
+		}	
+	    }
 	    g_free(unescaped);
 	} else {
 	    new_name = g_convert(unescaped, -1, "UTF-8", encoding, NULL, NULL, NULL);
