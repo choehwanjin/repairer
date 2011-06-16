@@ -41,8 +41,6 @@ static GType filename_repairer_type = 0;
 
 // from http://www.microsoft.com/globaldev/reference/wincp.mspx
 // Code Pages Supported by Windows
-// The first item will be selected as a default encoding if the matching locale
-// string is not exist
 static const char* encoding_list[] = {
     "CP1252",  // Latin I  (default encoding)
     "CP1250",  // Central Europe
@@ -109,157 +107,9 @@ static const struct encoding_item default_encoding_list[] = {
     { NULL,    NULL      }
 };
 
-static gboolean
-candidate_list_has_item(GPtrArray* array, const char* str)
-{
-    guint i;
-    for (i = 0; i < array->len; i++) {
-	if (strcmp(str, array->pdata[i]) == 0) {
-	    return TRUE;
-	}
-    }
-    return FALSE;
-}
-
-static void
-candidate_list_add_default_encoding(GPtrArray* array, const char* basename)
-{
-    char* locale = setlocale(LC_CTYPE, NULL);
-    if (locale != NULL) {
-	const struct encoding_item* item = default_encoding_list;
-	while (item->locale != NULL) {
-	    size_t len = strlen(item->locale);
-	    if (strncmp(item->locale, locale, len) == 0) {
-		char* new_name = g_convert(basename, -1,
-				"UTF-8", item->encoding, NULL, NULL, NULL);
-		if (new_name != NULL) {
-		    char* locale_filename;
-		    locale_filename = g_filename_from_utf8(new_name, -1, 
-						   NULL, NULL, NULL);
-		    if (locale_filename != NULL) {
-			g_ptr_array_add(array, new_name);
-			g_free(locale_filename);
-		    }
-		}
-	    }
-	    item++;
-	}
-    }
-}
-
-static GPtrArray*
-create_candidate_list(NautilusFileInfo* info)
-{
-    gboolean islocal;
-    GPtrArray* array = NULL;
-
-    GFile* gfile = nautilus_file_info_get_location(info);
-    islocal = g_file_has_uri_scheme(gfile, "file");
-    if (islocal) {
-	char* filename = g_file_get_basename(gfile);
-	if (filename != NULL) {
-	    char* unescaped_filename;
-	    char* displayname;
-	    char* replacement;
-
-	    /* test for URI encoded filenames */
-	    unescaped_filename = g_uri_unescape_string(filename, NULL);
-	    if (unescaped_filename != NULL) {
-		if (strcmp(filename, unescaped_filename) != 0) {
-		    /* if the unescaped filename is valid UTF-8,
-		     * then only the unescaped filename will be added
-		     * but if not, unescaped filename must be in legacy
-		     * encoding, so we should examine its encoding */
-		    if (g_utf8_validate(unescaped_filename, -1, NULL)) {
-			array = g_ptr_array_new();
-			g_ptr_array_add(array, g_strdup(unescaped_filename));
-		    } else {
-			/* exchange the filename with unescaped name 
-			 * to examine encoding of unescaped_filename */
-			g_free(filename);
-			filename = g_strdup(unescaped_filename);
-		    }
-		}
-		g_free(unescaped_filename);
-	    }
-
-	    displayname = g_filename_display_name(filename);
-	    // search for U+FFFD (the Unicode replacement char)
-	    // if the filename has wrong char, displayname may have U+FFFD
-	    // UTF-8 encoded form of U+FFFD is "\357\277\275"
-	    replacement = strstr(displayname, "\357\277\275");
-	    if (replacement != NULL) {
-		char* new_name;
-		int i;
-
-		if (array == NULL)
-		    array = g_ptr_array_new();
-
-		candidate_list_add_default_encoding(array, filename);
-
-		for (i = 0; encoding_list[i] != NULL; i++) {
-		    new_name = g_convert(filename, -1,
-			"UTF-8", encoding_list[i], NULL, NULL, NULL);
-		    if (new_name != NULL) {
-			char* locale_filename;
-			locale_filename = g_filename_from_utf8(new_name, -1, 
-						       NULL, NULL, NULL);
-			if (locale_filename != NULL) {
-			    if (!candidate_list_has_item(array, new_name)) {
-				g_ptr_array_add(array, new_name);
-			    } else {
-				g_free(new_name);
-			    }
-			    g_free(locale_filename);
-			}
-		    }
-		}
-	    } else {
-		// A filename from MacOSX is usually in NFD.
-		// So, if the filename is not in NFC,
-		// try to make it NFC.
-		gchar* normalized = g_utf8_normalize(filename, -1, G_NORMALIZE_NFC);
-		if (normalized != NULL) {
-		    if (strcmp(filename, normalized) != 0) {
-			if (array == NULL)
-			    array = g_ptr_array_new();
-			g_ptr_array_add(array, normalized);
-		    } else {
-			g_free(normalized);
-		    }
-		}
-	    }
-
-	    g_free(displayname);
-	    g_free(filename);
-	}
-    }
-    g_object_unref(gfile);
-    
-    return array;
-}
-
-typedef struct {
-    GPtrArray* candidates;
-    GList*     files;
-    GtkWidget* parent;
-} RepairCallbackArgs;
-
-static void
-filename_repairer_callback_args_free(gpointer data, GClosure* closure)
-{
-    if (data != NULL) {
-	RepairCallbackArgs* args = (RepairCallbackArgs*)data;
-	g_ptr_array_free(args->candidates, TRUE);
-	nautilus_file_info_list_free(args->files);
-	g_free(args);
-    }
-}
-
 static void
 show_error_message(GtkWidget* parent, const char* filename, GError* error)
 {
-    gint result;
     GtkWidget *dialog;
 
     dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW(parent),
@@ -271,70 +121,61 @@ show_error_message(GtkWidget* parent, const char* filename, GError* error)
 		filename,
 		error->message
 		);
-    result = gtk_dialog_run(GTK_DIALOG (dialog));
+    gtk_dialog_run(GTK_DIALOG (dialog));
     gtk_widget_destroy(dialog);
 }
 
 static void
-filename_repairer_callback(NautilusMenuItem *item, RepairCallbackArgs *args)
+on_rename_menu_item_activated(NautilusMenuItem *item, gpointer *data)
 {
     gboolean res;
+    gchar* new_name;
+    GFile* file;
+    GFile* new_file;
+    GFile* parent;
+    GtkWidget* window;
     GError* error = NULL;
-    guint candidate_index;
 
-    char* new_utf8_filename;
-    char* new_filename;
-    GFile* gfile_parent;
-    GFile* gfile_old;
-    GFile* gfile_new;
+    new_name = g_object_get_data(G_OBJECT(item), "Repairer::new_name");
+    file = g_object_get_data(G_OBJECT(item), "Repairer::file");
+    window = g_object_get_data(G_OBJECT(item), "Repairer::window");
 
-    candidate_index = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "candidate_index"));
-    new_utf8_filename = (char*)args->candidates->pdata[candidate_index];
-    new_filename = g_filename_from_utf8(new_utf8_filename,
-					 -1, NULL, NULL, NULL);
+    parent = g_file_get_parent(file);
+    new_file = g_file_get_child(parent, new_name);
 
-    gfile_old = nautilus_file_info_get_location(args->files->data);
-    gfile_parent = g_file_get_parent(gfile_old);
-    gfile_new = g_file_get_child(gfile_parent, new_filename);
-
-    g_free(new_filename);
-
-    res = g_file_move(gfile_old, gfile_new,
-		G_FILE_COPY_NOFOLLOW_SYMLINKS,
+    res = g_file_move(file, new_file, G_FILE_COPY_NOFOLLOW_SYMLINKS,
 		NULL, NULL, NULL, &error);
     if (!res) {
-	    show_error_message(args->parent, new_utf8_filename, error);
 	if (error->code == G_IO_ERROR_EXISTS) {
 	    gint result;
 	    GtkWidget *dialog;
 
-	    dialog = gtk_message_dialog_new(GTK_WINDOW(args->parent),
+	    dialog = gtk_message_dialog_new(GTK_WINDOW(window),
 			GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
 			GTK_MESSAGE_QUESTION,
 			GTK_BUTTONS_OK_CANCEL,
 			_("A file named \"%s\" already exists.  Do you want to replace it?"),
-			new_utf8_filename);
+			new_name);
 	    result = gtk_dialog_run(GTK_DIALOG (dialog));
 	    gtk_widget_destroy(dialog);
 
 	    if (result == GTK_RESPONSE_OK) {
 		GError* error2 = NULL;
-		res = g_file_move(gfile_old, gfile_new,
+		res = g_file_move(file, new_file,
 			G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
 			NULL, NULL, NULL, &error2);
 		if (!res) {
-		    show_error_message(args->parent, new_utf8_filename, error2);
+		    show_error_message(window, new_name, error2);
 		}
 	    }
 	} else {
-	    show_error_message(args->parent, new_utf8_filename, error);
+	    show_error_message(window, new_name, error);
 	}
 	g_error_free(error);
     }
 
-    g_object_unref(gfile_parent);
-    g_object_unref(gfile_new);
-    g_object_unref(gfile_old);
+    g_object_unref(parent);
+    g_object_unref(new_file);
 }
 
 static void
@@ -378,7 +219,7 @@ repair_dialog_menu_item_new(GList* files)
     const char* tooltip;
     NautilusMenuItem* item;
 
-    name    = "NautilusFilenameRepairer::rename_manully";
+    name    = "Repairer::manual_rename";
     label   = _("Repair filename ...");
     tooltip = _("Repair filename");
 
@@ -411,84 +252,231 @@ get_filename_without_mnemonic(const char* filename)
     return g_string_free(str, FALSE);
 }
 
-static GList*
-append_repair_menu_items(GList* items, GtkWidget *window, GList *files)
+static NautilusMenuItem*
+rename_menu_item_new(const char* name, GFile* file, int menu_index,
+	GtkWidget* window, gboolean is_submenu)
 {
-    NautilusMenu*     submenu;
+    gchar id[128];
+    gchar* filename;
+    gchar* label;
+    gchar* tooltip;
     NautilusMenuItem* item;
-    GPtrArray*        array;
-    char*             name;
-    char*             label;
-    char*             tooltip;
-    char*             filename;
-    RepairCallbackArgs* args;
 
-    if (files == NULL)
-	return items;
+    filename = get_filename_without_mnemonic(name);
+    
+    g_snprintf(id, sizeof(id), "Repairer::rename_as_%d", menu_index);
+    if (is_submenu)
+	label   = g_strdup(filename);
+    else
+	label   = g_strdup_printf(_("Re_name as \"%s\""), filename);
+    tooltip = g_strdup_printf(_("Rename as \"%s\"."), name);
 
-    if (files->next != NULL)
-	return items;
+    g_object_ref(file);
 
-    array = create_candidate_list(files->data);
-    if (array == NULL)
-	return items;
+    item = nautilus_menu_item_new(id, label, tooltip, NULL);
+    g_object_set_data(G_OBJECT(item), "Repairer::window", window);
+    g_object_set_data_full(G_OBJECT(item), "Repairer::file",
+			    file, g_object_unref);
+    g_object_set_data_full(G_OBJECT(item), "Repairer::new_name",
+			    g_strdup(name), g_free);
+    g_signal_connect(G_OBJECT(item), "activate",
+		     G_CALLBACK(on_rename_menu_item_activated), NULL);
 
-    if (array->len == 0) {
-	g_ptr_array_free(array, TRUE);
-	return items;
-    }
-
-    filename = get_filename_without_mnemonic(array->pdata[0]);
-    name    = "NautilusFilenameRepairer::rename_as_0";
-    label   = g_strdup_printf(_("Re_name as \"%s\""), filename);
-    tooltip = g_strdup_printf(_("Rename as \"%s\"."), (char*)array->pdata[0]);
-
-    args = g_new(RepairCallbackArgs, 1);
-    args->candidates = array;
-    args->files = nautilus_file_info_list_copy(files);
-    args->parent = window;
-
-    item = nautilus_menu_item_new(name, label, tooltip, NULL);
-    g_object_set_data(G_OBJECT(item), "candidate_index", GUINT_TO_POINTER(0));
-    g_signal_connect_data(item, "activate",
-			  G_CALLBACK(filename_repairer_callback),
-			  args, filename_repairer_callback_args_free, 0);
-    items = g_list_append(items, item);
     g_free(filename);
     g_free(label);
     g_free(tooltip);
 
-    if (array->len > 1) {
-	guint i = 0;
+    return item;
+}
 
-	name = "NautilusFilenameRepairer::rename_as_submenu";
-	item = nautilus_menu_item_new(name,
-			      _("Select a filename"),
-			      _("Select a filename from sub menu items."),
-			      NULL);
-	submenu = nautilus_menu_new();
-	nautilus_menu_item_set_submenu(item, submenu);
-	items = g_list_append(items, item);
+static GList*
+append_uri_item(GList* menu, const char* name,  const char* new_name,
+	GFile* file, GtkWidget* window)
+{
+    NautilusMenuItem* item;
+    int menu_index;
 
-	for (i = 1 ; i < array->len; i++) {
-	    name = g_strdup_printf("NautilusFilenameRepairer::rename_as_%d", i);
-	    filename = get_filename_without_mnemonic(array->pdata[i]);
-	    label = g_strdup_printf(_("Rename as \"%s\""), filename);
+    if (strcmp(name, new_name) != 0) {
+	menu_index = g_list_length(menu);
+	item = rename_menu_item_new(new_name, file, menu_index, window, FALSE);
+	menu = g_list_append(menu, item);
+    }
 
-	    item = nautilus_menu_item_new(name, label, label, NULL);
-	    g_object_set_data(G_OBJECT(item), "candidate_index", GUINT_TO_POINTER(i));
-	    g_signal_connect(item, "activate",
-			     G_CALLBACK(filename_repairer_callback),
-			     args);
-	    nautilus_menu_append_item(submenu, item);
+    return menu;
+}
 
-	    g_free(filename);
-	    g_free(label);
-	    g_free(name);
+static GList*
+append_unicode_nfc_item(GList* menu, const char* name,
+		GFile* file, GtkWidget* window)
+{
+    NautilusMenuItem* item;
+    char* nfc;
+    int menu_index;
+
+    /* test for MacOSX filename which is NFD */
+    nfc = g_utf8_normalize(name, -1, G_NORMALIZE_NFC);
+    if (nfc != NULL) {
+	if (strcmp(name, nfc) != 0) {
+	    menu_index = g_list_length(menu);
+	    item = rename_menu_item_new(nfc, file, menu_index, window, FALSE);
+	    menu = g_list_append(menu, item);
+	}
+	g_free(nfc);
+    }
+
+    return menu;
+}
+
+static GList*
+append_default_encoding_items(GList* menu,
+	    const char* name, GFile* file, GtkWidget* window)
+{
+    char* locale;
+    const struct encoding_item* e;
+    NautilusMenuItem* item;
+    int menu_index;
+
+    locale = setlocale(LC_CTYPE, NULL);
+    if (locale == NULL)
+	return menu;
+
+    menu_index = g_list_length(menu);
+    for (e = default_encoding_list; e->locale != NULL; e++) {
+	size_t len = strlen(e->locale);
+	if (strncmp(e->locale, locale, len) == 0) {
+	    gchar* new_name;
+	    new_name = g_convert(name, -1,
+			    "UTF-8", e->encoding, NULL, NULL, NULL);
+	    if (new_name == NULL)
+		continue;
+
+	    if (strcmp(name, new_name) != 0) {
+		item = rename_menu_item_new(new_name, file,
+				menu_index, window, FALSE);
+		menu = g_list_append(menu, item);
+		menu_index++;
+	    }
+
+	    g_free(new_name);
 	}
     }
 
-    return items;
+    return menu;
+}
+
+static GList*
+append_other_encoding_items(GList* menu,
+	     const char* name, GFile* file, GtkWidget* window)
+{
+    NautilusMenu* submenu;
+    NautilusMenuItem* item;
+    GTree* new_name_table;
+    gchar* new_name;
+    int i;
+    int menu_index;
+    gpointer have_item;
+    
+    submenu = NULL;
+    menu_index = g_list_length(menu);
+    new_name_table = g_tree_new_full((GCompareDataFunc)strcmp,
+			     NULL, g_free, NULL);
+    for (i = 0; encoding_list[i] != NULL; i++) {
+	new_name = g_convert(name, -1, "UTF-8", encoding_list[i],
+			NULL, NULL, NULL);
+	if (new_name == NULL)
+	    continue;
+
+	if (strcmp(name, new_name) == 0) {
+	    g_free(new_name);
+	    continue;
+	}
+
+	have_item = g_tree_lookup(new_name_table, new_name);
+	if (have_item == NULL) {
+	    if (submenu == NULL)
+		submenu = nautilus_menu_new();
+
+	    item = rename_menu_item_new(new_name, file,
+			    menu_index, window, TRUE);
+	    nautilus_menu_append_item(submenu, item);
+	    g_tree_insert(new_name_table, new_name, new_name);
+	    
+	    menu_index++;
+	} else {
+	    g_free(new_name);
+	}
+    }
+
+    g_tree_destroy(new_name_table);
+
+    if (submenu != NULL) {
+	const char* menu_id;
+	menu_id = "Repairer::rename_as_submenu";
+	item = nautilus_menu_item_new(menu_id,
+			      _("Select a filename"),
+			      _("Select a filename from sub menu items."),
+			      NULL);
+
+	nautilus_menu_item_set_submenu(item, submenu);
+	menu = g_list_append(menu, item);
+    }
+
+    return menu;
+}
+
+static GList*
+append_repair_menu_items(GList* menu, GtkWidget *window, GList *files)
+{
+    GFile* file;
+    gboolean is_native;
+    gchar* name;
+    gchar* unescaped;
+    gchar* reconverted;
+
+    if (files == NULL)
+	return menu;
+
+    if (files->next != NULL)
+	return menu;
+
+    file = nautilus_file_info_get_location(files->data);
+    if (file == NULL)
+	return menu;
+
+    is_native = g_file_is_native(file);
+    if (!is_native)
+	return menu;
+
+    name = g_file_get_basename(file);
+    if (name == NULL)
+	return menu;
+
+    /* test for URI encoded filenames */
+    unescaped = g_uri_unescape_string(name, NULL);
+    if (unescaped != NULL) {
+	if (g_utf8_validate(unescaped, -1, NULL)) {
+	    menu = append_uri_item(menu, name, unescaped, file, window);
+	    menu = append_unicode_nfc_item(menu, unescaped, file, window);
+	}
+	g_free(name);
+	name = unescaped;
+    }
+
+    if (g_utf8_validate(name, -1, NULL)) {
+	reconverted = g_convert(name, -1, "CP1252", "UTF-8", NULL, NULL, NULL);
+	if (reconverted != NULL) {
+	    menu = append_default_encoding_items(menu, reconverted, file, window);
+	    g_free(reconverted);
+	}
+    } else {
+	menu = append_default_encoding_items(menu, name, file, window);
+	menu = append_other_encoding_items(menu, name, file, window);
+    }
+
+    g_free(name);
+    g_object_unref(file);
+
+    return menu;
 }
 
 static gboolean
@@ -519,17 +507,17 @@ nautilus_filename_repairer_get_file_items(NautilusMenuProvider *provider,
 					  GList                *files)
 {
     NautilusMenuItem* item;
-    GList* items;
+    GList* menu;
 
-    items = NULL;
-    items = append_repair_menu_items(items, window, files);
+    menu = NULL;
+    menu = append_repair_menu_items(menu, window, files);
 
     if (need_repair_dialog(files)) {
 	item = repair_dialog_menu_item_new(files);
-	items = g_list_append(items, item);
+	menu = g_list_append(menu, item);
     }
 
-    return items;
+    return menu;
 }
 
 static void
