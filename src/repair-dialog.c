@@ -47,6 +47,7 @@ static void repair_dialog_set_file_list_view(GtkDialog* dialog, GtkTreeView* vie
 
 static void repair_dialog_update_file_list_model(GtkDialog* dialog, gboolean async);
 static gboolean repair_dialog_on_idle_update(GtkDialog* dialog);
+static void repair_dialog_on_update_end(GtkDialog* dialog, gboolean success_all);
 
 
 static const char* encoding_list[][2] = {
@@ -893,6 +894,8 @@ repair_dialog_update_file_list_model(GtkDialog* dialog, gboolean async)
 
 	gtk_tree_view_expand_all(treeview);
 	g_free(encoding);
+
+	repair_dialog_on_update_end(dialog, success_all);
     }
 }
 
