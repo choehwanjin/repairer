@@ -3,6 +3,8 @@
 #include <gtk/gtk.h>
 
 #include "nautilus-filename-repairer-i18n.h"
+#include "repair-dialog.h"
+#include "encoding-dialog.h"
 
 #define REPAIR_DIALOG_UI PKGDATADIR "/repair-dialog.ui"
 
@@ -275,6 +277,18 @@ encoding_list_model_new()
 		-1);
 	i++;
     }
+
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+	    ENCODING_COLUMN_LABEL, NULL,
+	    ENCODING_COLUMN_ENCODING, NULL,
+	    -1);
+
+    gtk_list_store_append(store, &iter);
+    gtk_list_store_set(store, &iter,
+	    ENCODING_COLUMN_LABEL, _("Other ..."),
+	    ENCODING_COLUMN_ENCODING, NULL,
+	    -1);
 
     return store;
 }
@@ -552,19 +566,56 @@ on_encoding_changed(GtkComboBox* combo, GtkDialog* dialog)
 
     encoding = NULL;
     gtk_tree_model_get(model, &iter, ENCODING_COLUMN_ENCODING, &encoding, -1);
+    if (encoding == NULL) {
+	GtkDialog* encoding_dialog;
+	char* other_encoding;
 
-    store = repair_dialog_get_file_list_model(dialog);
+	encoding_dialog = encoding_dialog_new(GTK_WINDOW(dialog));
+	other_encoding = encoding_dialog_run(encoding_dialog);
+	gtk_widget_destroy(GTK_WIDGET(encoding_dialog));
 
-    res = file_list_model_update_new_names(store, encoding);
-    repair_dialog_set_conversion_state(dialog, res);
+	if (other_encoding != NULL) {
+	    GtkTreeIter iter2;
+	    gtk_list_store_insert_before(GTK_LIST_STORE(model), &iter2, &iter);
+	    gtk_list_store_set(GTK_LIST_STORE(model), &iter2,
+		    ENCODING_COLUMN_LABEL, other_encoding,
+		    ENCODING_COLUMN_ENCODING, other_encoding,
+		    -1);
+	    gtk_combo_box_set_active_iter(combo, &iter2);
+	    g_free(other_encoding);
+	} else {
+	    select_default_encoding(combo, model);
+	}
+    } else {
+	store = repair_dialog_get_file_list_model(dialog);
 
-    g_free(encoding);
+	res = file_list_model_update_new_names(store, encoding);
+	repair_dialog_set_conversion_state(dialog, res);
+
+	g_free(encoding);
+    }
 }
 
 static void
 on_subdir_check_toggled(GtkToggleButton* button, GtkDialog* dialog)
 {
     repair_dialog_update_file_list_model(dialog, TRUE);
+}
+
+static gboolean
+is_separator(GtkTreeModel* model, GtkTreeIter* iter, gpointer data)
+{
+    gboolean res;
+    gchar* label;
+
+    res = FALSE;
+    label = NULL;
+    gtk_tree_model_get(model, iter, ENCODING_COLUMN_LABEL, &label, -1);
+    if (label == NULL)
+	res = TRUE;
+    g_free(label);
+
+    return res;
 }
 
 GtkDialog*
@@ -607,6 +658,7 @@ repair_dialog_new(GSList* files)
     model = (GtkTreeModel*)encoding_list_model_new();
     combobox = GTK_COMBO_BOX(object);
     gtk_combo_box_set_model(combobox, model);
+    gtk_combo_box_set_row_separator_func(combobox, is_separator, NULL, NULL);
     g_object_unref(G_OBJECT(model));
     select_default_encoding(combobox, model);
     repair_dialog_set_encoding_combo_box(dialog, combobox);

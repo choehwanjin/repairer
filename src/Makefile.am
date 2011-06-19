@@ -23,6 +23,8 @@ nautilus_filename_repairer_SOURCES = \
 	repairer.c \
 	repair-dialog.h \
 	repair-dialog.c \
+	encoding-dialog.h \
+	encoding-dialog.c \
 	$(NULL)
 
 nautilus_filename_repairer_CFLAGS = \
@@ -34,4 +36,5 @@ nautilus_filename_repairer_LDADD = $(NAUTILUS_LIBS)
 
 pkgdata_DATA = \
 	repair-dialog.ui \
+	encoding-dialog.ui \
 	$(NULL)
