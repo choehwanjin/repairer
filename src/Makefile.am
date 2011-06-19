@@ -38,3 +38,7 @@ pkgdata_DATA = \
 	repair-dialog.ui \
 	encoding-dialog.ui \
 	$(NULL)
+
+EXTRA_DIST = \
+	$(pkgdata_DATA) \
+	$(NULL)
