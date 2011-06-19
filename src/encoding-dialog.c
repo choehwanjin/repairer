@@ -20,6 +20,10 @@
  * Author: Choe Hwajin <choe.hwanjin@gmail.com>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <gtk/gtk.h>
 
 #include "nautilus-filename-repairer-i18n.h"
@@ -98,6 +102,7 @@ encoding_dialog_new(GtkWindow* parent)
 
     builder = gtk_builder_new();
     gtk_builder_add_from_file(builder, ENCODINGS_DIALOG_UI, NULL);
+    gtk_builder_set_translation_domain(builder, GETTEXT_PACKAGE);
 
     object = gtk_builder_get_object(builder, "encoding_dialog");
     if (object == NULL)

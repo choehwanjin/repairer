@@ -20,6 +20,10 @@
  * Author: Choe Hwajin <choe.hwanjin@gmail.com>
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <string.h>
 #include <locale.h>
 #include <gtk/gtk.h>
