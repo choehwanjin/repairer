@@ -211,6 +211,7 @@ change_filename(GFile* src, const char* dst_name, GtkWidget* parent_window)
                   "<span weight=\"bold\" size=\"larger\">%s</span>"),
 		display_name, dst_name,
                 error->message);
+	    gtk_window_set_title(GTK_WINDOW(dialog), _("Error"));
 	    gtk_dialog_run(GTK_DIALOG(dialog));
 	    gtk_widget_destroy(dialog);
 
