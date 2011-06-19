@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     files = NULL;
     if (argc == 1) {
 	dialog = GTK_DIALOG(gtk_file_chooser_dialog_new(
-			_("Filename Repairer: Select File"),
+			_("Nautilus Filename Repairer: Select Files To Rename"),
 			NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN,
 			GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
