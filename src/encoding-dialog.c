@@ -159,7 +159,6 @@ encoding_dialog_show_error_message(GtkDialog* dialog, const char* encoding)
 	    _("<span size=\"larger\">The selected \"%s\" is invalid encoding.</span>\n"
 	      "<span size=\"larger\">Please choose another one.</span>"),
 	    encoding);
-    gtk_window_set_title(GTK_WINDOW(message), _("Error"));
     gtk_dialog_run(GTK_DIALOG(message));
     gtk_widget_destroy(message);
 }

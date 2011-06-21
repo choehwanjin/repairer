@@ -116,12 +116,11 @@ show_error_message(GtkWidget* parent, const char* filename, GError* error)
 		GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
 		GTK_MESSAGE_ERROR,
 		GTK_BUTTONS_CLOSE,
-		_("An error accurs while renaming the file to \"%s\":\n\n"
-		  "<span weight=\"bold\" size=\"larger\">%s</span>"),
-		filename,
-		error->message
-		);
-    gtk_window_set_title(GTK_WINDOW(dialog), _("Error"));
+		_("<span size=\"larger\" weight=\"bold\">There was an error renaming the file to \"%s\"</span>"),
+		filename);
+    gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(dialog),
+		"%s",
+		error->message);
     gtk_dialog_run(GTK_DIALOG (dialog));
     gtk_widget_destroy(dialog);
 }
@@ -148,27 +147,20 @@ on_rename_menu_item_activated(NautilusMenuItem *item, gpointer *data)
 		NULL, NULL, NULL, &error);
     if (!res) {
 	if (error->code == G_IO_ERROR_EXISTS) {
-	    gint result;
 	    GtkWidget *dialog;
 
-	    dialog = gtk_message_dialog_new(GTK_WINDOW(window),
+	    dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW(window),
 			GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL, 
-			GTK_MESSAGE_QUESTION,
-			GTK_BUTTONS_OK_CANCEL,
-			_("A file named \"%s\" already exists.  Do you want to replace it?"),
+			GTK_MESSAGE_WARNING,
+			GTK_BUTTONS_CLOSE,
+			_("<span size=\"larger\" weight=\"bold\">A file named \"%s\" already exists.</span>"),
 			new_name);
-	    result = gtk_dialog_run(GTK_DIALOG (dialog));
+	    gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(dialog),
+		    _("If you want to rename the selected file, "
+		      "please move or rename \"%s\" first."),
+		    new_name);
+	    gtk_dialog_run(GTK_DIALOG (dialog));
 	    gtk_widget_destroy(dialog);
-
-	    if (result == GTK_RESPONSE_OK) {
-		GError* error2 = NULL;
-		res = g_file_move(file, new_file,
-			G_FILE_COPY_OVERWRITE | G_FILE_COPY_NOFOLLOW_SYMLINKS,
-			NULL, NULL, NULL, &error2);
-		if (!res) {
-		    show_error_message(window, new_name, error2);
-		}
-	    }
 	} else {
 	    show_error_message(window, new_name, error);
 	}
