@@ -1013,7 +1013,7 @@ repair_dialog_on_idle_update(GtkDialog* dialog)
 	return FALSE;
     }
 
-    for (i = 0; i < 5000; i++) {
+    for (i = 0; i < 500; i++) {
 	if (context->file_stack == NULL) {
 	    repair_dialog_set_update_context(dialog, NULL);
 	    repair_dialog_on_update_end(dialog, context->success_all);
