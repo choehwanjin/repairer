@@ -1,3 +1,10 @@
+Filename Repairer 0.1.0
+ * add recursive rename feature using repair dialog
+ * add multiple rename feature using repair dialog
+ * support Mac OS X filename that is in Unicode NFD
+ * detect misconverted filename
+ * add Ukrainian translation by Serhij Dubyk / Сергій Дубик <dubyk * library.lviv.ua>
+
 Filename Repairer 0.0.6
  * migrate to GIO
 
