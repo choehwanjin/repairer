@@ -918,6 +918,12 @@ repair_dialog_update_file_list_model(GtkDialog* dialog, gboolean async)
     gtk_tree_store_clear(store);
 
     if (async) {
+	context = repair_dialog_get_update_context(dialog);
+	if (context != NULL) {
+	    g_idle_remove_by_data(dialog);
+	    update_context_free(context);
+	}
+
 	context = update_context_new();
 	context->dialog = dialog;
 	context->treeview = treeview;
@@ -1009,6 +1015,7 @@ repair_dialog_on_idle_update(GtkDialog* dialog)
 
     for (i = 0; i < 5000; i++) {
 	if (context->file_stack == NULL) {
+	    repair_dialog_set_update_context(dialog, NULL);
 	    repair_dialog_on_update_end(dialog, context->success_all);
 	    update_context_free(context);
 	    return FALSE;
