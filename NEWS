@@ -1,4 +1,4 @@
-Filename Repairer 0.1.0
+Filename Repairer 0.1.1
  * add recursive rename feature using repair dialog
  * add multiple rename feature using repair dialog
  * support Mac OS X filename that is in Unicode NFD
