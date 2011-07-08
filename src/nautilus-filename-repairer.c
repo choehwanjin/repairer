@@ -459,6 +459,7 @@ append_repair_menu_items(GList* menu, GtkWidget *window, GList *files)
 	reconverted = g_convert(name, -1, "CP1252", "UTF-8", NULL, NULL, NULL);
 	if (reconverted != NULL) {
 	    menu = append_default_encoding_items(menu, reconverted, file, window);
+	    menu = append_other_encoding_items(menu, reconverted, file, window);
 	    g_free(reconverted);
 	}
     } else {
