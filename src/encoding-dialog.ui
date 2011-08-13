@@ -22,20 +22,13 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Encoding name to add: </property>
                 <property name="use_underline">True</property>
-                <property name="accel_widget">encoding_name_entry</property>
               </object>
               <packing>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxEntry" id="encoding_name_entry">
-                <property name="visible">True</property>
-                <property name="has_entry">True</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>

@@ -31,6 +31,12 @@
 
 #define ENCODINGS_DIALOG_UI PKGDATADIR "/encoding-dialog.ui"
 
+#if GTK_CHECK_VERSION(3,0,0)
+#define HAVE_GTK_COMBO_BOX_ENTRY 0
+#else
+#define HAVE_GTK_COMBO_BOX_ENTRY 1
+#endif
+
 enum {
     ENCODING_COLUMN_ENCODING,
     ENCODING_NUM_COLUMNS
@@ -88,7 +94,34 @@ encoding_dialog_get_encoding(GtkDialog* dialog)
 
     combobox = g_object_get_data(G_OBJECT(dialog), "encoding_entry");
 
+#if HAVE_COMBO_BOX_ENTRY
     return gtk_combo_box_get_active_text(combobox);
+#else
+    {
+	GtkWidget* entry;
+	const char* text;
+
+	entry = gtk_bin_get_child(GTK_BIN(combobox));
+	text = gtk_entry_get_text(GTK_ENTRY(entry));
+	return g_strdup(text);
+    }
+#endif
+}
+
+static GtkWidget*
+combobox_entry_new(GtkTreeModel* model)
+{
+    GtkWidget* combobox;
+
+#if HAVE_COMBO_BOX_ENTRY
+    combobox = gtk_combo_box_entry_new_with_model(model,
+	    ENCODING_COLUMN_ENCODING);
+#else
+    combobox = gtk_combo_box_new_with_model_and_entry(model);
+    gtk_combo_box_set_entry_text_column(GTK_COMBO_BOX(combobox),
+	    ENCODING_COLUMN_ENCODING);
+#endif
+    return combobox;
 }
 
 GtkDialog*
@@ -97,8 +130,10 @@ encoding_dialog_new(GtkWindow* parent)
     GtkBuilder* builder;
     GObject* object;
     GtkDialog* dialog;
-    GtkComboBoxEntry* entry;
+    GtkWidget* combobox;
     GtkTreeModel* model;
+
+    dialog = NULL;
 
     builder = gtk_builder_new();
     gtk_builder_add_from_file(builder, ENCODINGS_DIALOG_UI, NULL);
@@ -106,22 +141,29 @@ encoding_dialog_new(GtkWindow* parent)
 
     object = gtk_builder_get_object(builder, "encoding_dialog");
     if (object == NULL)
-	return NULL;
+	goto done;
 
     dialog = GTK_DIALOG(object);
     gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
 
-    object = gtk_builder_get_object(builder, "encoding_name_entry");
-    if (object == NULL) {
-	return dialog;
-    }
-
     model = GTK_TREE_MODEL(get_encoding_list_model());
-    entry = GTK_COMBO_BOX_ENTRY(object);
-    gtk_combo_box_set_model(GTK_COMBO_BOX(entry), model);
-    gtk_combo_box_entry_set_text_column(entry, ENCODING_COLUMN_ENCODING);
-    g_object_set_data(G_OBJECT(dialog), "encoding_entry", entry);
+    combobox = combobox_entry_new(model);
+    g_object_set_data(G_OBJECT(dialog), "encoding_entry", combobox);
 
+    object = gtk_builder_get_object(builder, "hbox1");
+    if (object == NULL)
+	goto done;
+
+    gtk_box_pack_start(GTK_BOX(object), combobox, FALSE, TRUE, 0);
+    gtk_widget_show(combobox);
+
+    object = gtk_builder_get_object(builder, "accellabel1");
+    if (object == NULL)
+	goto done;
+
+    gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(object), combobox);
+
+done:
     g_object_unref(builder);
 
     return dialog;
