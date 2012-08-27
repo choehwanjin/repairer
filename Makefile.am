@@ -15,16 +15,16 @@ DISTCHECK_CONFIGURE_FLAGS = --with-nautilus-extension-dir=$${dc_install_base}/li
 
 
 dist-hook:
-	@if test -d .svn ; then \
-		svn2cl --include-rev --break-before-msg=2 --authors=svnauthors -o $(distdir)/ChangeLog ; \
+	@if test -d .git ; then \
+		git log > $(distdir)/ChangeLog ; \
 	else \
 		touch $(distdir)/ChangeLog ; \
 	fi
 
 .PHONY: log
 log:
-	@if test -d .svn ; then \
-		svn2cl --include-rev --break-before-msg=2 --authors=svnauthors ; \
+	@if test -d .git ; then \
+		git log > ChangeLog ; \
 	else \
 		touch ChangeLog ; \
 	fi
