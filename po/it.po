@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: nautilus filename repairer 0.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-21 23:25+0900\n"
+"POT-Creation-Date: 2012-08-27 22:58+0900\n"
 "PO-Revision-Date: 2008-01-13 02:07+ZONE\n"
 "Last-Translator: Choe Hwanjin <choe.hwanjin@gmail.com>\n"
 "Language-Team: ko <ko@li.org>\n"
@@ -121,22 +121,26 @@ msgstr ""
 msgid "Western European latin - CP1252"
 msgstr ""
 
-#: ../src/repair-dialog.c:210
+#: ../src/repair-dialog.c:96
+msgid "IBM PC (MS-DOS) - CP437"
+msgstr ""
+
+#: ../src/repair-dialog.c:211
 #, c-format
 msgid ""
 "<span size=\"larger\" weight=\"bold\">There was an error renaming \"%s\" to "
 "\"%s\"</span>"
 msgstr ""
 
-#: ../src/repair-dialog.c:315
+#: ../src/repair-dialog.c:316
 msgid "Other ..."
 msgstr ""
 
-#: ../src/repair-dialog.c:721
+#: ../src/repair-dialog.c:722
 msgid "As is"
 msgstr ""
 
-#: ../src/repair-dialog.c:728
+#: ../src/repair-dialog.c:729
 msgid "To be"
 msgstr ""
 
@@ -152,7 +156,7 @@ msgstr ""
 msgid "Select _encoding:"
 msgstr ""
 
-#: ../src/encoding-dialog.c:159
+#: ../src/encoding-dialog.c:201
 #, c-format
 msgid ""
 "<span size=\"larger\">The selected \"%s\" is invalid encoding.</span>\n"
