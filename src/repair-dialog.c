@@ -93,6 +93,7 @@ static const char* encoding_list[][2] = {
     { N_("Turkish - CP1254"),                 "CP1254" },
     { N_("Vietnamese - CP1258"),              "CP1258" },
     { N_("Western European latin - CP1252"),  "CP1252" },
+    { N_("IBM PC (MS-DOS) - CP437"),          "CP437"  },
     { NULL,                               NULL     }
 };
 
