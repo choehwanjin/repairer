@@ -42,6 +42,8 @@ int main(int argc, char** argv)
     textdomain(GETTEXT_PACKAGE);
 #endif
 
+    repairer_utils_set_app_path(argv[0]);
+
     gtk_init(&argc, &argv);
 
     files = NULL;
@@ -82,6 +84,8 @@ int main(int argc, char** argv)
 
     g_slist_foreach(files, (GFunc)g_object_unref, NULL);
     g_slist_free(files);
+
+    repairer_utils_set_app_path(NULL);
 
     return 0;
 }

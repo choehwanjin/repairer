@@ -31,8 +31,8 @@
 #include "nautilus-filename-repairer-i18n.h"
 #include "repair-dialog.h"
 #include "encoding-dialog.h"
+#include "repairer-utils.h"
 
-#define REPAIR_DIALOG_UI PKGDATADIR "/repair-dialog.ui"
 
 enum {
     FILE_COLUMN_GFILE,
@@ -657,10 +657,15 @@ repair_dialog_new(GSList* files)
     GtkCellRenderer* renderer;
     GtkBuilder* builder;
     gboolean include_subdir = FALSE;
+    gchar* ui_path;
+
+    ui_path = repairer_utils_get_ui_path("repair-dialog.ui");
     
     builder = gtk_builder_new();
     gtk_builder_set_translation_domain(builder, GETTEXT_PACKAGE);
-    gtk_builder_add_from_file(builder, REPAIR_DIALOG_UI, NULL);
+    gtk_builder_add_from_file(builder, ui_path, NULL);
+
+    g_free(ui_path);
 
     object = gtk_builder_get_object(builder, "repair_dialog");
     if (object == NULL)

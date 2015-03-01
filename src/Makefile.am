@@ -25,6 +25,8 @@ nautilus_filename_repairer_SOURCES = \
 	repair-dialog.c \
 	encoding-dialog.h \
 	encoding-dialog.c \
+	repairer-utils.h \
+	repairer-utils.c \
 	$(NULL)
 
 nautilus_filename_repairer_CFLAGS = \

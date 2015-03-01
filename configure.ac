@@ -45,6 +45,12 @@ fi
 AC_MSG_RESULT([${NAUTILUS_EXTENSION_DIR}])
 AC_SUBST(NAUTILUS_EXTENSION_DIR)
 
+AC_ARG_ENABLE([debug],
+    [AS_HELP_STRING([--enable-debug], [enable debugging features])])
+AS_IF([test "x$enable_debug" = "xyes"],[
+    AC_DEFINE(ENABLE_DEBUG, 1, [Define to 1 if you enable debugging features.])
+])
+
 AC_CONFIG_FILES([Makefile
 		 src/Makefile
 		 po/Makefile.in])

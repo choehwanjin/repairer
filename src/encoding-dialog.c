@@ -28,8 +28,7 @@
 
 #include "nautilus-filename-repairer-i18n.h"
 #include "encoding-dialog.h"
-
-#define ENCODINGS_DIALOG_UI PKGDATADIR "/encoding-dialog.ui"
+#include "repairer-utils.h"
 
 #if GTK_CHECK_VERSION(3,0,0)
 #define HAVE_GTK_COMBO_BOX_ENTRY 0
@@ -132,12 +131,17 @@ encoding_dialog_new(GtkWindow* parent)
     GtkDialog* dialog;
     GtkWidget* combobox;
     GtkTreeModel* model;
+    gchar* ui_path;
 
     dialog = NULL;
 
+    ui_path = repairer_utils_get_ui_path("encoding-dialog.ui");
+
     builder = gtk_builder_new();
-    gtk_builder_add_from_file(builder, ENCODINGS_DIALOG_UI, NULL);
+    gtk_builder_add_from_file(builder, ui_path, NULL);
     gtk_builder_set_translation_domain(builder, GETTEXT_PACKAGE);
+
+    g_free(ui_path);
 
     object = gtk_builder_get_object(builder, "encoding_dialog");
     if (object == NULL)
