@@ -3,6 +3,7 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache
+compile
 config.guess
 config.h
 config.h.in
@@ -33,3 +34,4 @@ src/*.lo
 src/*.la
 src/nautilus-filename-repairer
 stamp-h1
+*~
