@@ -1,3 +1,7 @@
+Filename Repairer 0.2
+ * support GTK+ 3 (Issue #5, #11)
+ * add German translation by Chris Leick <c.leick@freenet.de>
+
 Filename Repairer 0.1.1
  * add recursive rename feature using repair dialog
  * add multiple rename feature using repair dialog
